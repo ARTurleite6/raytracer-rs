@@ -1,3 +1,4 @@
-pub mod scene;
-pub mod geometry;
-pub mod rays;
+mod helpers;
+mod object;
+pub mod raytracer;
+mod scene;

@@ -1,3 +1,5 @@
+use raytracer_lib::raytracer::RayTracer;
+
 fn main() {
-    println!("Hello, world!");
+    RayTracer::new().render();
 }

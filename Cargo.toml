@@ -11,3 +11,4 @@ path = "src/lib.rs"
 
 [dependencies]
 nalgebra = "0.32.4"
+tobj = "4.0.1"
