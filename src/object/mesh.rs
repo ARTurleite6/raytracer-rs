@@ -1,9 +1,9 @@
-use super::intersection::{get_depth, Intersectable};
+use super::intersection::{get_min_intersection, Intersectable};
 use nalgebra::{Vector2, Vector3};
 use tobj::Model;
 
 use super::{bounding_box::BoundingBox, face::Face, intersection::Intersection, ray::Ray};
-use crate::helpers::{Comparable, Vec3};
+use crate::helpers::Comparable;
 
 #[derive(Debug, Default)]
 pub struct Mesh {
@@ -11,6 +11,16 @@ pub struct Mesh {
     name: String,
     faces: Vec<Face>,
     bounding_box: BoundingBox,
+}
+
+impl Intersectable for Mesh {
+    fn intersect(&self, ray: &Ray) -> Option<Intersection> {
+        if !self.bounding_box.intersect(ray) {
+            return None;
+        }
+
+        get_min_intersection(ray, &self.faces)
+    }
 }
 
 impl Mesh {
@@ -24,27 +34,6 @@ impl Mesh {
         }
 
         self.bounding_box = BoundingBox::new(min_vert, max_vert);
-    }
-
-    fn intersect(&self, ray: &Ray) -> Option<Vec3> {
-        if !self.bounding_box.intersect(ray) {
-            return None;
-        }
-        let mut min_intersection: Option<Vec3> = None;
-        for face in self.faces.iter() {
-            if let Some(intersection) = face.intersect(ray) {
-                if let Some(curr_intersection) = &min_intersection {
-                    let intersection_depth = get_depth(&intersection, ray);
-                    let curr_intersection_depth = get_depth(&curr_intersection, ray);
-                    if intersection_depth < curr_intersection_depth {
-                        min_intersection = Some(intersection);
-                    }
-                } else {
-                    min_intersection = Some(intersection);
-                }
-            }
-        }
-        min_intersection
     }
 }
 
@@ -61,7 +50,7 @@ impl From<Model> for Mesh {
 
         obj.faces.reserve(mesh.indices.len() / 3);
         let mut next_face = 0;
-        for face in 0..mesh.indices.len() / 3 {
+        for (i, face) in (0..mesh.indices.len() / 3).enumerate() {
             let end = next_face + 3;
             let face_indices = &indices[next_face..end];
 
@@ -122,7 +111,7 @@ impl From<Model> for Mesh {
             // ]);
             // }
 
-            obj.faces.push(Face::new(vertices, normals, texcoords));
+            obj.faces.push(Face::new(i, vertices, normals, texcoords));
 
             next_face = end;
         }

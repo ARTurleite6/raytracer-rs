@@ -8,7 +8,8 @@ pub struct RayTracer {
 impl RayTracer {
     pub fn new() -> RayTracer {
         RayTracer {
-            scene: Scene::new("models/cornell_box.obj").unwrap(),
+            // TODO: load camera
+            scene: Scene::new("models/cornell_box.obj", "").unwrap(),
         }
     }
 

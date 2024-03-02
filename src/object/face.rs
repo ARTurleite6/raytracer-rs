@@ -1,7 +1,5 @@
 use nalgebra::{Vector2, Vector3};
 
-use crate::helpers::Vec3;
-
 use super::{
     bounding_box::BoundingBox,
     intersection::{Intersectable, Intersection},
@@ -10,6 +8,7 @@ use super::{
 
 #[derive(Debug)]
 pub struct Face {
+    face_id: usize,
     vertex: [Vector3<f32>; 3],
     normal_coordinates: Option<[Vector3<f32>; 3]>,
     texture_coordinates: Option<[Vector2<f32>; 3]>,
@@ -18,6 +17,7 @@ pub struct Face {
 
 impl Face {
     pub fn new(
+        face_id: usize,
         vertex: [Vector3<f32>; 3],
         normal_coordinates: Option<[Vector3<f32>; 3]>,
         texture_coordinates: Option<[Vector2<f32>; 3]>,
@@ -41,6 +41,7 @@ impl Face {
             }),
         );
         Self {
+            face_id,
             vertex,
             texture_coordinates,
             normal_coordinates,
@@ -54,7 +55,7 @@ impl Face {
 }
 
 impl Intersectable for Face {
-    fn intersect(&self, ray: &Ray) -> Option<Vec3> {
+    fn intersect(&self, ray: &Ray) -> Option<Intersection> {
         if !self.bounding_box.intersect(ray) {
             return None;
         }
@@ -71,7 +72,15 @@ impl Intersectable for Face {
         let t = ao.dot(&plane_normal) * inv_det;
 
         if t >= 0.0 && u > 0.0 && v > 0.0 && u + v <= 1.0 {
-            return Some(ray.get_origin() + t * ray.get_direction());
+            let point = ray.get_origin() + t * ray.get_direction();
+            return Some(Intersection::new(
+                point,
+                plane_normal,
+                plane_normal,
+                -ray.get_direction(),
+                t,
+                self.face_id,
+            ))
         }
         None
     }
