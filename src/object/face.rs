@@ -24,20 +24,18 @@ impl Face {
     ) -> Self {
         let bounding_box = BoundingBox::new(
             vertex.iter().fold(vertex[0], |acc, new_vertex| {
-                let min = Vector3::new(
+                Vector3::new(
                     acc.x.min(new_vertex.x),
                     acc.y.min(new_vertex.y),
                     acc.z.min(new_vertex.z),
-                );
-                min
+                )
             }),
             vertex.iter().fold(vertex[0], |acc, new_vertex| {
-                let max = Vector3::new(
+                Vector3::new(
                     acc.x.max(new_vertex.x),
                     acc.y.max(new_vertex.y),
                     acc.z.max(new_vertex.z),
-                );
-                max
+                )
             }),
         );
         Self {
@@ -66,7 +64,7 @@ impl Intersectable for Face {
         let det = -ray.get_direction().dot(&plane_normal);
         let inv_det = 1.0 / det;
         let ao = ray.get_origin() - self.vertex[0];
-        let dao = ao.cross(&ray.get_direction());
+        let dao = ao.cross(ray.get_direction());
         let u = edge_2.dot(&dao) * inv_det;
         let v = -edge_1.dot(&dao) * inv_det;
         let t = ao.dot(&plane_normal) * inv_det;
@@ -80,7 +78,7 @@ impl Intersectable for Face {
                 -ray.get_direction(),
                 t,
                 self.face_id,
-            ))
+            ));
         }
         None
     }

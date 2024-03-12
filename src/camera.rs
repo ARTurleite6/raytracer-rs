@@ -1,26 +1,15 @@
 use serde::Deserialize;
 
-use crate::helpers::{Mat3, Vec3};
+use crate::{
+    helpers::{Mat3, Vec3},
+    object::ray::Ray,
+};
 
 #[derive(Debug, Deserialize)]
 struct MyVec3 {
     x: f32,
     y: f32,
     z: f32,
-}
-
-#[derive(Debug, Default)]
-pub struct Camera {
-    look_at: Vec3,
-    position: Vec3,
-    width: u32,
-    height: u32,
-    angle_w: f64,
-    angle_h: f64,
-    up: Vec3,
-    forward: Vec3,
-    right: Vec3,
-    camera_to_world: Mat3,
 }
 
 #[derive(Deserialize, Debug)]
@@ -49,6 +38,20 @@ impl From<CameraArgs> for Camera {
             look_at,
         )
     }
+}
+
+#[derive(Debug, Default)]
+pub struct Camera {
+    look_at: Vec3,
+    position: Vec3,
+    width: u32,
+    height: u32,
+    angle_w: f64,
+    angle_h: f64,
+    up: Vec3,
+    forward: Vec3,
+    right: Vec3,
+    camera_to_world: Mat3,
 }
 
 impl Camera {
@@ -81,6 +84,19 @@ impl Camera {
         }
     }
 
+    pub fn get_ray(&self, x: f64, y: f64) -> Ray {
+        let xs = (2.0 * (x + 0.5) / self.width as f64) - 1.0;
+        let ys = (2.0 * (self.height as f64 - y - 1.0 + 0.5) / self.height as f64) - 1.0;
+
+        let xc = xs * self.angle_w;
+        let yc = ys * self.angle_h;
+
+        Ray::new(
+            self.look_at,
+            self.camera_to_world * Vec3::new(xc as f32, yc as f32, 1.0).normalize(),
+        )
+    }
+
     pub fn width(&self) -> u32 {
         self.width
     }
@@ -90,10 +106,11 @@ impl Camera {
     }
 
     pub fn load(path: &str) -> std::io::Result<Camera> {
-        let file = std::fs::File::open(path).unwrap();
+        let file = std::fs::File::open(path)?;
         let reader = std::io::BufReader::new(file);
-        Ok(serde_json::from_reader::<std::io::BufReader<std::fs::File>, CameraArgs>(reader)
-            ?
-            .into())
+        Ok(
+            serde_json::from_reader::<std::io::BufReader<std::fs::File>, CameraArgs>(reader)?
+                .into(),
+        )
     }
 }

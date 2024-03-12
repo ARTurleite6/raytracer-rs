@@ -34,29 +34,26 @@ impl Scene {
         println!("# of models: {}", models.len());
         println!("# of materials: {}", scene.materials.len());
 
-        scene.objects = models.into_iter().map(|model| Mesh::from(model)).collect();
+        scene.objects = models.into_iter().map(Mesh::from).collect();
 
         dbg!(&scene.objects);
 
         todo!("Implement loading of the scene");
     }
 
-    fn render(&self) -> Image {
-        let image = Image::new(self.camera.width(), self.camera.height());
+    fn render(&self) -> Result<Image, Box<dyn Error>> {
+        let image = Image::new(self.camera.width(), self.camera.height())?;
 
         for h in 0..self.camera.height() {
             for w in 0..self.camera.width() {
-                todo!("Implement rendering of the scene")
+                let ray = self.camera.get_ray(w as f64, h as f64);
+                todo!()
             }
         }
-        image
+        Ok(image)
     }
 
     fn cast_ray(&self, ray: &Ray) -> Option<Intersection> {
-        let intersection = get_min_intersection(ray, &self.objects);
-
-        todo!("Implement the actualization of the intersection");
-
-        intersection
+        get_min_intersection(ray, &self.objects)
     }
 }

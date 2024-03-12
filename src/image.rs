@@ -1,49 +1,74 @@
+use nalgebra::Vector3;
+use std::error::Error;
 use std::fs::File;
-use std::io::BufWriter;
-use std::path::Path;
-use png::Encoder;
+use std::io::Write;
 
+#[derive(Debug)]
 pub struct Image {
     width: u32,
     height: u32,
-    image_data: Vec<f32>,
+    image_data: Vec<Vector3<f32>>,
 }
 
 impl Image {
-    pub fn new(width: u32, height: u32) -> Self {
-        Self {
+    pub fn new(width: u32, height: u32) -> Result<Self, Box<dyn Error>> {
+        if width == 0 || height == 0 {
+            return Err("Invalid image size".into());
+        }
+
+        let image_data = vec![Vector3::<f32>::default(); (width * height) as usize];
+        Ok(Self {
             width,
             height,
-            image_data: Vec::new(),
-        }
+            image_data,
+        })
     }
 
-    pub fn write_png(&self, filename: &str) -> Result<(), Box<dyn std::error::Error>> {
-        let path = Path::new(filename);
-        let file = File::create(path)?;
-        let ref mut writer = BufWriter::new(file);
+    pub fn set_pixel(&mut self, x: u32, y: u32, color: Vector3<f32>) -> Result<(), Box<dyn Error>> {
+        //TODO: Perguntar ao stor possivel erro
+        if x >= self.width || y >= self.height {
+            return Err("Pixel out of bounds".into());
+        }
+        self.image_data[(y * self.width + x) as usize] = color;
+        Ok(())
+    }
 
-        let mut encoder = Encoder::new(writer, self.width, self.height);
-        encoder.set_color(png::ColorType::Rgba);
-        encoder.set_depth(png::BitDepth::Eight);
+    pub fn add_pixel(&mut self, x: u32, y: u32, color: Vector3<f32>) -> Result<(), Box<dyn Error>> {
+        //TODO: Perguntar ao stor possivel erro
+        if x >= self.width || y >= self.height {
+            return Err("Pixel out of bounds".into());
+        }
+        self.image_data[(y * self.width + x) as usize] += color;
+        Ok(())
+    }
 
-        let mut png_writer = encoder.write_header()?;
-        let mut png_data = Vec::new();
+    fn tone_map(&self) -> Vec<Vector3<u8>> {
+        let mut pixel_data = vec![Vector3::<u8>::default(); (self.width * self.height) as usize];
 
-        for pixel in &self.image_data {
-            let r = (pixel * 255.0) as u8;
-            let g = (pixel * 255.0) as u8;
-            let b = (pixel * 255.0) as u8;
-            let a = 255;
-
-            png_data.push(r);
-            png_data.push(g);
-            png_data.push(b);
-            png_data.push(a);
+        for j in 0..self.height {
+            for i in 0..self.width {
+                let pixel = self.image_data[(j * self.width + i) as usize];
+                pixel_data.push(Vector3::<u8>::new(
+                    (pixel.z.min(1.0) * 255.0) as u8,
+                    (pixel.x.min(1.0) * 255.0) as u8,
+                    (pixel.y.min(1.0) * 255.0) as u8,
+                ));
+            }
         }
 
-        png_writer.write_image_data(&png_data)?;
+        pixel_data
+    }
 
+    pub fn save(&self, path: &str) -> std::io::Result<()> {
+        let data = self.tone_map();
+
+        let mut file = File::create(path)?;
+
+        let _ = file.write(std::format!("P6\n{} {}\n255\n", self.width, self.height).as_bytes())?;
+
+        for pixel in data {
+            let _ = file.write(&[pixel.x, pixel.y, pixel.z])?;
+        }
         Ok(())
     }
 }
