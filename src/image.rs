@@ -16,9 +16,7 @@ impl Image {
             return Err("Invalid image size".into());
         }
 
-        dbg!(width * height);
         let image_data = vec![Vector3::<f32>::default(); (width * height) as usize];
-        dbg!(&image_data.len());
         Ok(Self {
             width,
             height,

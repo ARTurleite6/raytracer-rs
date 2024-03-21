@@ -1,5 +1,5 @@
-use super::intersection::{get_min_intersection, Intersectable};
-use nalgebra::{Vector2, Vector3};
+use super::intersection::{get_min_intersection, Intersectable, MaterialInformation};
+use nalgebra::Vector3;
 use tobj::Model;
 
 use super::{bounding_box::BoundingBox, face::Face, intersection::Intersection, ray::Ray};
@@ -19,7 +19,17 @@ impl Intersectable for Mesh {
             return None;
         }
 
-        get_min_intersection(ray, &self.faces)
+        let mut intersection = get_min_intersection(ray, &self.faces);
+        if let Some(material_id) = self.material_id {
+            if let Some(intersection) = &mut intersection {
+                intersection.brdf = Some(MaterialInformation {
+                    material: None,
+                    material_id,
+                });
+            }
+        }
+
+        intersection
     }
 }
 
@@ -34,6 +44,10 @@ impl Mesh {
         }
 
         self.bounding_box = BoundingBox::new(min_vert, max_vert);
+    }
+
+    fn material_id(&self) -> Option<usize> {
+        self.material_id
     }
 }
 

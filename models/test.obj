@@ -1,0 +1,16 @@
+# cornell_box.obj and cornell_box.mtl are grabbed from Intel's embree project.
+# original cornell box data
+  # comment
+
+# empty line including some space
+   
+
+mtllib cornell_box.mtl
+
+o floor
+usemtl white
+v -100 0.0   0.0
+v 100.0   0.0   0.0
+v 0.0   250.0 50.0
+
+f 1 2 3

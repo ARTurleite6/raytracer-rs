@@ -88,15 +88,17 @@ impl Camera {
     pub fn get_ray(&self, x: usize, y: usize, jitter: Vector2<f32>) -> Ray {
         let xf = x as f32;
         let yf = y as f32;
-        let xs = (2.0 * (xf + jitter.x) / self.width as f32) - 1.0;
-        let ys = (2.0 * (self.height as f32 - yf - 1.0 + jitter.y) / self.height as f32) - 1.0;
+        let xs = (2.0 * (xf) / self.width as f32) - 1.0;
+        let ys = (2.0 * (self.height as f32 - yf - 1.0) / self.height as f32) - 1.0;
 
         let xc = xs * self.angle_w;
         let yc = ys * self.angle_h;
 
         Ray::new(
-            self.look_at,
+            self.position,
             self.camera_to_world * Vec3::new(xc as f32, yc as f32, 1.0).normalize(),
+            x,
+            y,
         )
     }
 

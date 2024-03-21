@@ -57,7 +57,6 @@ impl Intersectable for Face {
         if !self.bounding_box.intersect(ray) {
             return None;
         }
-
         let edge_1 = self.vertex[1] - self.vertex[0];
         let edge_2 = self.vertex[2] - self.vertex[0];
         let plane_normal = edge_1.cross(&edge_2);

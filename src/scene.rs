@@ -1,15 +1,15 @@
 use std::error::Error;
 
-use nalgebra::{Vector2, Vector3};
+use nalgebra::Vector2;
 use tobj::{Material, GPU_LOAD_OPTIONS};
 
 use crate::{
     camera::Camera,
-    image::Image,
+    helpers::Vec3,
+    light::{AmbientLight, Light},
     object::{
-        intersection::{get_min_intersection, Intersection},
+        intersection::{get_min_intersection, Intersection, MaterialInformation},
         mesh::Mesh,
-        ray::Ray,
     },
 };
 
@@ -17,7 +17,7 @@ use crate::{
 pub struct Scene {
     materials: Vec<Material>,
     objects: Vec<Mesh>,
-    // lights: Vec<Light>,
+    lights: Vec<Light>,
     camera: Camera,
 }
 
@@ -34,6 +34,10 @@ impl Scene {
         self.camera.height()
     }
 
+    pub fn lights(&self) -> &[Light] {
+        &self.lights
+    }
+
     fn load_obj(obj_path: &str, camera_path: &str) -> Result<Self, Box<dyn Error>> {
         let mut scene = Scene::default();
         let (models, materials) = tobj::load_obj(obj_path, &GPU_LOAD_OPTIONS)?;
@@ -46,13 +50,25 @@ impl Scene {
 
         scene.objects = models.into_iter().map(Mesh::from).collect();
 
-        dbg!(&scene.objects);
+        scene.lights = vec![Light::Ambient(AmbientLight::new(Vec3::new(0.9, 0.9, 0.9)))];
+
         Ok(scene)
     }
 
     pub fn cast_ray(&self, x: usize, y: usize, jitter: Vector2<f32>) -> Option<Intersection> {
         let ray = self.camera.get_ray(x, y, jitter);
-        let intersection = get_min_intersection(&ray, &self.objects)?;
+        let mut intersection = get_min_intersection(&ray, &self.objects)?;
+
+        if let Some(MaterialInformation {
+            material_id,
+            material: _,
+        }) = &mut intersection.brdf
+        {
+            intersection.brdf = Some(MaterialInformation {
+                material_id: *material_id,
+                material: Some(self.materials[*material_id].clone()),
+            });
+        }
         Some(intersection)
     }
 }

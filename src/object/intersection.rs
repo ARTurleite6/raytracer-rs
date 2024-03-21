@@ -4,6 +4,12 @@ use crate::helpers::Vec3;
 
 use super::ray::Ray;
 
+#[derive(Debug, Clone)]
+pub struct MaterialInformation {
+    pub material: Option<Material>,
+    pub material_id: usize,
+}
+
 #[derive(Debug)]
 pub struct Intersection {
     point: Vec3,
@@ -11,7 +17,7 @@ pub struct Intersection {
     shading_normal: Vec3,
     w_outgoing: Vec3,
     depth: f32,
-    brdf: Option<Material>,
+    pub brdf: Option<MaterialInformation>,
     face_id: usize,
 }
 
@@ -37,10 +43,6 @@ impl Intersection {
 
     pub fn get_depth(&self) -> f32 {
         self.depth
-    }
-
-    pub fn set_brdf(&mut self, brdf: Material) {
-        self.brdf = brdf.into();
     }
 }
 

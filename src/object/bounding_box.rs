@@ -30,14 +30,14 @@ impl BoundingBox {
         let t_y_min = (self.min.y - origin.y) / direction.y;
         let t_y_max = (self.max.y - origin.y) / direction.y;
 
-        let t_min = t_y_min.min(t_y_max);
-        let t_max = t_y_min.max(t_y_max);
+        let t_min = t_min.max(t_y_min.min(t_y_max));
+        let t_max = t_max.min(t_y_min.max(t_y_max));
 
         let t_z_min = (self.min.z - origin.z) / direction.z;
         let t_z_max = (self.max.z - origin.z) / direction.z;
 
-        let t_min = t_z_min.min(t_z_max);
-        let t_max = t_z_min.max(t_z_max);
+        let t_min = t_min.max(t_z_min.min(t_z_max));
+        let t_max = t_max.min(t_z_min.max(t_z_max));
 
         t_max >= t_min
     }

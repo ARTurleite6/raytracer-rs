@@ -1,7 +1,12 @@
-use nalgebra::{Vector2, Vector3};
+use nalgebra::Vector2;
 use rand::Rng;
 
-use crate::{image::Image, scene::Scene};
+use crate::{
+    helpers::Vec3,
+    image::Image,
+    scene::Scene,
+    shader::{ambient_shader::AmbientShader, Shader},
+};
 
 #[derive(Debug)]
 pub struct Renderer {
@@ -17,7 +22,8 @@ impl Renderer {
         let width = self.scene.width();
         let height = self.scene.height();
         let mut image = Image::new(width, height)?;
-        let color = Vector3::<f32>::new(0.5, 0.5, 0.5);
+        let shader = AmbientShader::new(Vec3::new(0.05, 0.05, 0.55));
+        let lights = self.scene.lights();
 
         for y in 0..height {
             for x in 0..width {
@@ -25,6 +31,7 @@ impl Renderer {
                 let jitter = Vector2::new(rng.gen::<f32>(), rng.gen::<f32>());
                 // let ray = self.camera.get_ray(w as f64, h as f64);
                 let intersection = self.scene.cast_ray(x, y, jitter);
+                let color = shader.shade(&intersection, lights);
                 image.set_pixel(x, y, color)?;
             }
         }

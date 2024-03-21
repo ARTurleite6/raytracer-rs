@@ -3,6 +3,10 @@ pub type Vec2 = nalgebra::Vector2<f32>;
 pub type Mat3 = nalgebra::Matrix3<f32>;
 pub type Color = Vec3;
 
+pub fn mul_vec3_with_rgb(v: Vec3, c: Vec3) -> Vec3 {
+    Vec3::new(v.x * c.x, v.y * c.y, v.z * c.z)
+}
+
 pub trait Comparable {
     fn min_between(&self, other: &Self) -> Self;
     fn max_between(&self, other: &Self) -> Self;
