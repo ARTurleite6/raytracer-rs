@@ -16,7 +16,7 @@ impl Image {
             return Err("Invalid image size".into());
         }
 
-        let image_data = vec![Vector3::<f32>::default(); (width * height) as usize];
+        let image_data = vec![Vector3::<f32>::default(); width * height];
         Ok(Self {
             width,
             height,
@@ -33,7 +33,7 @@ impl Image {
         if x >= self.width || y >= self.height {
             return Err("Pixel out of bounds".into());
         }
-        self.image_data[(y * self.width + x) as usize] = color;
+        self.image_data[y * self.width + x] = color;
         Ok(())
     }
 
@@ -47,16 +47,16 @@ impl Image {
         if x >= self.width || y >= self.height {
             return Err("Pixel out of bounds".into());
         }
-        self.image_data[(y * self.width + x) as usize] += color;
+        self.image_data[y * self.width + x] += color;
         Ok(())
     }
 
     fn tone_map(&self) -> Vec<Vector3<u8>> {
-        let mut pixel_data = vec![Vector3::<u8>::default(); (self.width * self.height) as usize];
+        let mut pixel_data = vec![Vector3::<u8>::default(); self.width * self.height];
 
         for j in 0..self.height {
             for i in 0..self.width {
-                let index = ((j * self.width) + i) as usize;
+                let index = (j * self.width) + i;
                 let pixel = self.image_data[index];
                 let pixel_color = Vector3::<u8>::new(
                     (pixel.x.min(1.0) * 255.0) as u8,

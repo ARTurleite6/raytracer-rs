@@ -40,12 +40,12 @@ impl Shader for AmbientShader {
                                 }
                             }
                         }
-                        return color;
+                        color
                     }
-                    None => return color,
+                    None => color,
                 }
             }
-            None => return self.background_color,
+            None => self.background_color,
         }
     }
 }
