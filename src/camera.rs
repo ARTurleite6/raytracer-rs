@@ -1,3 +1,4 @@
+use nalgebra::Vector2;
 use serde::Deserialize;
 
 use crate::{
@@ -14,10 +15,10 @@ struct MyVec3 {
 
 #[derive(Deserialize, Debug)]
 pub struct CameraArgs {
-    width: u32,
-    height: u32,
-    angle_x: f64,
-    angle_y: f64,
+    width: usize,
+    height: usize,
+    angle_x: f32,
+    angle_y: f32,
     position: MyVec3,
     up: MyVec3,
     look_at: MyVec3,
@@ -44,10 +45,10 @@ impl From<CameraArgs> for Camera {
 pub struct Camera {
     look_at: Vec3,
     position: Vec3,
-    width: u32,
-    height: u32,
-    angle_w: f64,
-    angle_h: f64,
+    width: usize,
+    height: usize,
+    angle_w: f32,
+    angle_h: f32,
     up: Vec3,
     forward: Vec3,
     right: Vec3,
@@ -56,10 +57,10 @@ pub struct Camera {
 
 impl Camera {
     pub fn new(
-        width: u32,
-        height: u32,
-        angle_x: f64,
-        angle_y: f64,
+        width: usize,
+        height: usize,
+        angle_x: f32,
+        angle_y: f32,
         position: Vec3,
         up: Vec3,
         look_at: Vec3,
@@ -84,9 +85,11 @@ impl Camera {
         }
     }
 
-    pub fn get_ray(&self, x: f64, y: f64) -> Ray {
-        let xs = (2.0 * (x + 0.5) / self.width as f64) - 1.0;
-        let ys = (2.0 * (self.height as f64 - y - 1.0 + 0.5) / self.height as f64) - 1.0;
+    pub fn get_ray(&self, x: usize, y: usize, jitter: Vector2<f32>) -> Ray {
+        let xf = x as f32;
+        let yf = y as f32;
+        let xs = (2.0 * (xf + jitter.x) / self.width as f32) - 1.0;
+        let ys = (2.0 * (self.height as f32 - yf - 1.0 + jitter.y) / self.height as f32) - 1.0;
 
         let xc = xs * self.angle_w;
         let yc = ys * self.angle_h;
@@ -97,11 +100,11 @@ impl Camera {
         )
     }
 
-    pub fn width(&self) -> u32 {
+    pub fn width(&self) -> usize {
         self.width
     }
 
-    pub fn height(&self) -> u32 {
+    pub fn height(&self) -> usize {
         self.height
     }
 

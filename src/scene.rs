@@ -1,5 +1,6 @@
 use std::error::Error;
 
+use nalgebra::{Vector2, Vector3};
 use tobj::{Material, GPU_LOAD_OPTIONS};
 
 use crate::{
@@ -16,12 +17,21 @@ use crate::{
 pub struct Scene {
     materials: Vec<Material>,
     objects: Vec<Mesh>,
+    // lights: Vec<Light>,
     camera: Camera,
 }
 
 impl Scene {
     pub fn new(obj_path: &str, camera_path: &str) -> Result<Self, Box<dyn Error>> {
         Self::load_obj(obj_path, camera_path)
+    }
+
+    pub fn width(&self) -> usize {
+        self.camera.width()
+    }
+
+    pub fn height(&self) -> usize {
+        self.camera.height()
     }
 
     fn load_obj(obj_path: &str, camera_path: &str) -> Result<Self, Box<dyn Error>> {
@@ -37,23 +47,12 @@ impl Scene {
         scene.objects = models.into_iter().map(Mesh::from).collect();
 
         dbg!(&scene.objects);
-
-        todo!("Implement loading of the scene");
+        Ok(scene)
     }
 
-    fn render(&self) -> Result<Image, Box<dyn Error>> {
-        let image = Image::new(self.camera.width(), self.camera.height())?;
-
-        for h in 0..self.camera.height() {
-            for w in 0..self.camera.width() {
-                let ray = self.camera.get_ray(w as f64, h as f64);
-                todo!()
-            }
-        }
-        Ok(image)
-    }
-
-    fn cast_ray(&self, ray: &Ray) -> Option<Intersection> {
-        get_min_intersection(ray, &self.objects)
+    pub fn cast_ray(&self, x: usize, y: usize, jitter: Vector2<f32>) -> Option<Intersection> {
+        let ray = self.camera.get_ray(x, y, jitter);
+        let intersection = get_min_intersection(&ray, &self.objects)?;
+        Some(intersection)
     }
 }

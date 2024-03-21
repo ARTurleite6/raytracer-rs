@@ -1,6 +1,7 @@
 pub type Vec3 = nalgebra::Vector3<f32>;
 pub type Vec2 = nalgebra::Vector2<f32>;
 pub type Mat3 = nalgebra::Matrix3<f32>;
+pub type Color = Vec3;
 
 pub trait Comparable {
     fn min_between(&self, other: &Self) -> Self;

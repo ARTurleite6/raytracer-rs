@@ -1,21 +1,21 @@
 use std::error::Error;
 
-use crate::scene::Scene;
+use crate::{renderer::Renderer, scene::Scene};
 
 #[derive(Debug)]
 pub struct RayTracer {
-    scene: Scene,
+    renderer: Renderer,
 }
 
 impl RayTracer {
     pub fn new(obj_path: &str, camera_path: &str) -> Result<RayTracer, Box<dyn Error>> {
         Ok(RayTracer {
-            // TODO: load camera
-            scene: Scene::new(obj_path, camera_path)?,
+            renderer: Renderer::new(Scene::new(obj_path, camera_path)?),
         })
     }
 
     pub fn render(&self) {
-        println!("Rendering...");
+        let image = self.renderer.render().unwrap();
+        image.save("output.png").unwrap();
     }
 }
