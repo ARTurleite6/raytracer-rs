@@ -18,8 +18,8 @@ impl BoundingBox {
     }
 
     pub fn intersect(&self, ray: &Ray) -> bool {
-        let origin = ray.get_origin();
-        let direction = ray.get_direction();
+        let origin = ray.origin();
+        let direction = ray.direction();
 
         let t_x_min = (self.min.x - origin.x) / direction.x;
         let t_x_max = (self.max.x - origin.x) / direction.x;

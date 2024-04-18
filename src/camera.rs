@@ -94,7 +94,7 @@ impl Camera {
         let xc = xs * self.angle_w;
         let yc = ys * self.angle_h;
 
-        Ray::new(
+        Ray::new_with_coords(
             self.position,
             self.camera_to_world * Vec3::new(xc, yc, 1.0).normalize(),
             x,

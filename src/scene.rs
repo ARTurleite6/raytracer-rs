@@ -6,10 +6,11 @@ use tobj::{Material, GPU_LOAD_OPTIONS};
 use crate::{
     camera::Camera,
     helpers::Vec3,
-    light::{AmbientLight, Light},
+    light::{ambient_light::AmbientLight, Light},
     object::{
-        intersection::{get_min_intersection, Intersection, MaterialInformation},
+        intersection::{get_min_intersection, Intersectable, Intersection, MaterialInformation},
         mesh::Mesh,
+        ray::Ray,
     },
 };
 
@@ -36,6 +37,14 @@ impl Scene {
 
     pub fn lights(&self) -> &[Light] {
         &self.lights
+    }
+
+    pub fn visibility(&self, ray: &Ray, max_l: f32) -> bool {
+        self.objects.iter().any(|object| {
+            object
+                .intersect(ray)
+                .map_or(false, |intersection| intersection.depth() < max_l)
+        })
     }
 
     fn load_obj(obj_path: &str, camera_path: &str) -> Result<Self, Box<dyn Error>> {

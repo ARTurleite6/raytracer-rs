@@ -1,7 +1,8 @@
 use crate::{
     helpers::{mul_vec3_with_rgb, Vec3},
-    light::{ILight, Light},
+    light::Light,
     object::intersection::Intersection,
+    scene::Scene,
 };
 
 use super::{Color, Shader};
@@ -17,7 +18,7 @@ impl AmbientShader {
 }
 
 impl Shader for AmbientShader {
-    fn shade(&self, intersection: &Option<Intersection>, lights: &[Light]) -> Color {
+    fn shade(&self, intersection: &Option<Intersection>, scene: &Scene) -> Color {
         let mut color = Vec3::new(0.0, 0.0, 0.0);
 
         match intersection {
@@ -32,12 +33,13 @@ impl Shader for AmbientShader {
 
                 match material.ambient {
                     Some(ambient) => {
-                        for light in lights {
+                        for light in scene.lights() {
                             match light {
                                 Light::Ambient(ambient_light) => {
                                     color +=
                                         mul_vec3_with_rgb(Vec3::from(ambient), ambient_light.l());
                                 }
+                                _ => {}
                             }
                         }
                         color

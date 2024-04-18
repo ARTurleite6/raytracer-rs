@@ -41,8 +41,20 @@ impl Intersection {
         }
     }
 
-    pub fn get_depth(&self) -> f32 {
+    pub fn depth(&self) -> f32 {
         self.depth
+    }
+
+    pub fn point(&self) -> Vec3 {
+        self.point
+    }
+
+    pub fn shading_normal(&self) -> Vec3 {
+        self.shading_normal
+    }
+
+    pub fn geometric_normal(&self) -> Vec3 {
+        self.geometry_normal
     }
 }
 
@@ -56,7 +68,7 @@ pub fn get_min_intersection<T: Intersectable>(ray: &Ray, objects: &[T]) -> Optio
     for object in objects.iter() {
         if let Some(intersection) = object.intersect(ray) {
             if let Some(curr_intersection) = &min_intersection {
-                if intersection.get_depth() < curr_intersection.get_depth() {
+                if intersection.depth() < curr_intersection.depth() {
                     min_intersection = Some(intersection);
                 }
             } else {
@@ -68,5 +80,5 @@ pub fn get_min_intersection<T: Intersectable>(ray: &Ray, objects: &[T]) -> Optio
 }
 
 pub fn get_depth(point: &Vec3, ray: &Ray) -> f32 {
-    (point - ray.get_origin()).norm()
+    (point - ray.origin()).norm()
 }

@@ -60,21 +60,21 @@ impl Intersectable for Face {
         let edge_1 = self.vertex[1] - self.vertex[0];
         let edge_2 = self.vertex[2] - self.vertex[0];
         let plane_normal = edge_1.cross(&edge_2);
-        let det = -ray.get_direction().dot(&plane_normal);
+        let det = -ray.direction().dot(&plane_normal);
         let inv_det = 1.0 / det;
-        let ao = ray.get_origin() - self.vertex[0];
-        let dao = ao.cross(ray.get_direction());
+        let ao = ray.origin() - self.vertex[0];
+        let dao = ao.cross(ray.direction());
         let u = edge_2.dot(&dao) * inv_det;
         let v = -edge_1.dot(&dao) * inv_det;
         let t = ao.dot(&plane_normal) * inv_det;
 
         if t >= 0.0 && u > 0.0 && v > 0.0 && u + v <= 1.0 {
-            let point = ray.get_origin() + t * ray.get_direction();
+            let point = ray.origin() + t * ray.direction();
             return Some(Intersection::new(
                 point,
                 plane_normal,
                 plane_normal,
-                -ray.get_direction(),
+                -ray.direction(),
                 t,
                 self.face_id,
             ));

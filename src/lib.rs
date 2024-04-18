@@ -1,9 +1,9 @@
+mod camera;
 mod helpers;
-mod object;
+mod image;
 mod light;
+mod object;
 pub mod raytracer;
 mod renderer;
 mod scene;
-mod camera;
 mod shader;
-mod image;
