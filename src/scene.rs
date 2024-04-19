@@ -65,6 +65,22 @@ impl Scene {
                 Color::new(0.65, 0.65, 0.65),
                 Vec3::new(288.0, 508.0, 282.0),
             )),
+            Light::Point(PointLight::new(
+                Color::new(0.55, 0.55, 0.55),
+                Vec3::new(200.0, 508.0, 200.0),
+            )),
+            Light::Point(PointLight::new(
+                Color::new(0.55, 0.55, 0.55),
+                Vec3::new(316.0, 508.0, 316.0),
+            )),
+            Light::Point(PointLight::new(
+                Color::new(0.55, 0.55, 0.55),
+                Vec3::new(316.0, 508.0, 200.0),
+            )),
+            Light::Point(PointLight::new(
+                Color::new(0.55, 0.55, 0.55),
+                Vec3::new(200.0, 508.0, 316.0),
+            )),
         ];
 
         Ok(scene)

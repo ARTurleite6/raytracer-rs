@@ -1,5 +1,5 @@
 use crate::{
-    helpers::{mul_vec3_with_rgb, Vec3},
+    helpers::{mul_vec3_with_rgb, Vec3, Zeroable},
     light::Light,
     object::intersection::Intersection,
     scene::Scene,
@@ -38,15 +38,22 @@ impl Shader for AmbientShader {
 
                 match material.ambient {
                     Some(ambient) => {
-                        for light in scene.lights() {
-                            match light {
-                                Light::Ambient(ambient_light) => {
-                                    let ambient =
-                                        [ambient[0] as f64, ambient[1] as f64, ambient[2] as f64];
-                                    color +=
-                                        mul_vec3_with_rgb(Vec3::from(ambient), ambient_light.l());
+                        if !ambient.is_zero() {
+                            for light in scene.lights() {
+                                match light {
+                                    Light::Ambient(ambient_light) => {
+                                        let ambient = [
+                                            ambient[0] as f64,
+                                            ambient[1] as f64,
+                                            ambient[2] as f64,
+                                        ];
+                                        color += mul_vec3_with_rgb(
+                                            Vec3::from(ambient),
+                                            ambient_light.l(),
+                                        );
+                                    }
+                                    _ => {}
                                 }
-                                _ => {}
                             }
                         }
                         color

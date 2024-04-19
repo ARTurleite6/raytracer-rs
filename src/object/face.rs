@@ -1,6 +1,6 @@
 use nalgebra::{Vector2, Vector3};
 
-use crate::helpers::Vec3;
+use crate::helpers::{face_forward, Vec3};
 
 use super::{
     bounding_box::BoundingBox,
@@ -93,12 +93,14 @@ impl Intersectable for Face {
 
         if t > EPSILON {
             let intersection_point = ray.origin() + ray.direction() * t;
+            let wo = -1.0 * ray.direction();
+            let normal = face_forward(self.normal, wo);
 
             Some(Intersection::new(
                 intersection_point,
-                self.normal,
-                self.normal,
-                -1.0 * ray.direction(),
+                normal,
+                normal,
+                wo,
                 t,
                 self.face_id,
             ))

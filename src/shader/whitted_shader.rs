@@ -14,19 +14,13 @@ impl WhittedShader {
         Self { background }
     }
 
-    fn specular_reflection(
-        &self,
-        intersection: &Intersection,
-        brdf: &Material,
-        scene: &Scene,
-        depth: u32,
-    ) -> Color {
+    fn specular_reflection(&self, intersection: &Intersection, scene: &Scene, depth: u32) -> Color {
         let wo = intersection.w_outgoing();
         let gn = intersection.geometric_normal();
 
         let cos = gn.dot(&wo);
 
-        let rdir = 2.0 * cos * gn - wo;
+        let rdir = (2.0 * cos * gn) - wo;
         let mut specular = Ray::new(intersection.point(), rdir);
         specular.adjust_origin(gn);
 
@@ -47,26 +41,31 @@ impl WhittedShader {
             match light {
                 Light::Ambient(ambient_light) => {
                     if let Some(ambient) = brdf.ambient {
-                        let ambient = [ambient[0] as f64, ambient[1] as f64, ambient[2] as f64];
-                        color += mul_vec3_with_rgb(Vec3::from(ambient), ambient_light.l());
+                        if !ambient.is_zero() {
+                            let ambient = [ambient[0] as f64, ambient[1] as f64, ambient[2] as f64];
+                            color += mul_vec3_with_rgb(Vec3::from(ambient), ambient_light.l());
+                        }
                     }
                 }
                 Light::Point(point_light) => {
                     if let Some(diffuse) = brdf.diffuse {
-                        let (light_color, light_pos) = point_light.l();
-                        let mut light_dir = light_pos - intersection.point();
-                        let light_distance = light_dir.norm();
-                        light_dir.normalize_mut();
+                        if !diffuse.is_zero() {
+                            let (light_color, light_pos) = point_light.l();
+                            let mut light_dir = light_pos - intersection.point();
+                            let light_distance = light_dir.norm();
+                            light_dir.normalize_mut();
 
-                        let cos = light_dir.dot(&intersection.shading_normal());
+                            let cos = light_dir.dot(&intersection.shading_normal());
 
-                        if cos > 0.0 {
-                            let mut shadow = Ray::new(intersection.point(), light_dir);
-                            shadow.adjust_origin(intersection.geometric_normal());
-                            if scene.visibility(&shadow, light_distance) {
-                                let diffuse =
-                                    [diffuse[0] as f64, diffuse[1] as f64, diffuse[2] as f64];
-                                color += mul_vec3_with_rgb(Vec3::from(diffuse), light_color) * cos;
+                            if cos > 0.0 {
+                                let mut shadow = Ray::new(intersection.point(), light_dir);
+                                shadow.adjust_origin(intersection.geometric_normal());
+                                if scene.visibility(&shadow, light_distance) {
+                                    let diffuse =
+                                        [diffuse[0] as f64, diffuse[1] as f64, diffuse[2] as f64];
+                                    color +=
+                                        mul_vec3_with_rgb(Vec3::from(diffuse), light_color) * cos;
+                                }
                             }
                         }
                     }
@@ -104,7 +103,7 @@ impl Shader for WhittedShader {
 
         if let Some(specular_material) = material.specular {
             if !specular_material.is_zero() && depth < 3 {
-                color += self.specular_reflection(intersection, material, scene, depth + 1)
+                color += self.specular_reflection(intersection, scene, depth + 1);
             }
         }
 
