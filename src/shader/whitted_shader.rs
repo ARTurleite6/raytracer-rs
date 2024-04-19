@@ -1,6 +1,6 @@
 use tobj::Material;
 
-use crate::helpers::{mul_vec3_with_rgb, Vec3};
+use crate::helpers::{face_forward, mul_vec3_with_rgb, Vec3};
 use crate::object::ray::Ray;
 use crate::scene::Scene;
 use crate::{helpers::Color, light::Light, object::intersection::Intersection, shader::Shader};
@@ -44,7 +44,6 @@ impl WhittedShader {
                             if scene.visibility(&shadow, light_distance) {
                                 color += mul_vec3_with_rgb(Vec3::from(diffuse), light_color) * cos;
                             }
-                            // let shadow = Ray::new(origin, direction, x, y)
                         }
                     }
                 }

@@ -1,5 +1,7 @@
 use crate::helpers::Vec3;
-use std::{default::Default, f32::EPSILON};
+use std::default::Default;
+
+const ADJUST_VALUE: f32 = 0.0001;
 
 #[derive(Debug, Default, Clone, Copy)]
 pub struct Ray {
@@ -28,10 +30,10 @@ impl Ray {
     }
 
     pub fn adjust_origin(&mut self, normal: Vec3) {
-        let mut offset = EPSILON * normal;
+        let mut offset = ADJUST_VALUE * normal;
 
         if self.direction.dot(&normal) < 0.0 {
-            offset.neg_mut();
+            offset = 1.0 * offset;
         }
 
         self.origin += offset;

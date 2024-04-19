@@ -8,6 +8,8 @@ use super::{
     ray::Ray,
 };
 
+const EPSILON: f32 = 0.0001;
+
 #[derive(Debug)]
 pub struct Face {
     face_id: usize,
@@ -25,7 +27,6 @@ impl Face {
         normal_coordinates: Option<[Vector3<f32>; 3]>,
         texture_coordinates: Option<[Vector2<f32>; 3]>,
     ) -> Self {
-        // TODO: Calculate the normal when creating the face, and normalize it
         let bounding_box = BoundingBox::new(
             vertex.iter().fold(vertex[0], |acc, new_vertex| {
                 Vector3::new(
@@ -71,7 +72,7 @@ impl Intersectable for Face {
         let ray_cross_e2 = ray.direction().cross(&edge_2);
         let det = edge_1.dot(&ray_cross_e2);
 
-        if det > -f32::EPSILON && det < f32::EPSILON {
+        if det > -EPSILON && det < EPSILON {
             return None;
         }
 
@@ -90,7 +91,7 @@ impl Intersectable for Face {
 
         let t = inv_det * edge_2.dot(&s_cross_e1);
 
-        if t > f32::EPSILON {
+        if t > EPSILON {
             let intersection_point = ray.origin() + ray.direction() * t;
 
             Some(Intersection::new(

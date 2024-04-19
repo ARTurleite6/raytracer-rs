@@ -41,9 +41,14 @@ impl Scene {
 
     pub fn visibility(&self, ray: &Ray, max_l: f32) -> bool {
         !self.objects.iter().any(|object| {
-            object
-                .intersect(ray)
-                .map_or(false, |intersection| intersection.depth() < max_l)
+            object.intersect(ray).map_or(false, |intersection| {
+                if intersection.depth() < max_l {
+                    dbg!(&object, &intersection, max_l, ray);
+                    true
+                } else {
+                    false
+                }
+            })
         })
     }
 

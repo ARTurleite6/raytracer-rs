@@ -41,12 +41,20 @@ impl Intersection {
         }
     }
 
+    pub fn face_id(&self) -> usize {
+        self.face_id
+    }
+
     pub fn depth(&self) -> f32 {
         self.depth
     }
 
     pub fn point(&self) -> Vec3 {
         self.point
+    }
+
+    pub fn w_outgoing(&self) -> Vec3 {
+        self.w_outgoing
     }
 
     pub fn shading_normal(&self) -> Vec3 {

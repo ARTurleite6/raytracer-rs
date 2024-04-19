@@ -125,7 +125,8 @@ impl From<Model> for Mesh {
             // ]);
             // }
 
-            obj.faces.push(Face::new(i, vertices, normals, texcoords));
+            obj.faces
+                .push(Face::new(face, vertices, normals, texcoords));
 
             next_face = end;
         }
