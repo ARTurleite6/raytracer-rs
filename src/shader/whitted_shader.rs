@@ -1,6 +1,6 @@
 use tobj::Material;
 
-use crate::helpers::{face_forward, mul_vec3_with_rgb, Vec3};
+use crate::helpers::{face_forward, mul_vec3_with_rgb, Vec3, Zeroable};
 use crate::object::ray::Ray;
 use crate::scene::Scene;
 use crate::{helpers::Color, light::Light, object::intersection::Intersection, shader::Shader};
@@ -12,6 +12,27 @@ pub struct WhittedShader {
 impl WhittedShader {
     pub fn new(background: Color) -> Self {
         Self { background }
+    }
+
+    fn specular_reflection(
+        &self,
+        intersection: &Intersection,
+        brdf: &Material,
+        scene: &Scene,
+        depth: u32,
+    ) -> Color {
+        let wo = intersection.w_outgoing();
+        let gn = intersection.geometric_normal();
+
+        let cos = gn.dot(&wo);
+
+        let rdir = 2.0 * cos * gn - wo;
+        let mut specular = Ray::new(intersection.point(), rdir);
+        specular.adjust_origin(gn);
+
+        let intersection = scene.trace(&specular);
+        let color = self.shade(&intersection, scene, Some(depth + 1));
+        color
     }
 
     fn direct_lighting(
@@ -26,6 +47,7 @@ impl WhittedShader {
             match light {
                 Light::Ambient(ambient_light) => {
                     if let Some(ambient) = brdf.ambient {
+                        let ambient = [ambient[0] as f64, ambient[1] as f64, ambient[2] as f64];
                         color += mul_vec3_with_rgb(Vec3::from(ambient), ambient_light.l());
                     }
                 }
@@ -42,6 +64,8 @@ impl WhittedShader {
                             let mut shadow = Ray::new(intersection.point(), light_dir);
                             shadow.adjust_origin(intersection.geometric_normal());
                             if scene.visibility(&shadow, light_distance) {
+                                let diffuse =
+                                    [diffuse[0] as f64, diffuse[1] as f64, diffuse[2] as f64];
                                 color += mul_vec3_with_rgb(Vec3::from(diffuse), light_color) * cos;
                             }
                         }
@@ -55,7 +79,13 @@ impl WhittedShader {
 }
 
 impl Shader for WhittedShader {
-    fn shade(&self, intersection: &Option<Intersection>, scene: &Scene) -> Color {
+    fn shade(
+        &self,
+        intersection: &Option<Intersection>,
+        scene: &Scene,
+        depth: Option<u32>,
+    ) -> Color {
+        let depth = depth.unwrap_or(0);
         let mut color = Color::new(0.0, 0.0, 0.0);
 
         let Some(intersection) = intersection else {
@@ -71,6 +101,12 @@ impl Shader for WhittedShader {
             .expect("Material in the material information");
 
         color += self.direct_lighting(&intersection, material, scene);
+
+        if let Some(specular_material) = material.specular {
+            if !specular_material.is_zero() && depth < 3 {
+                color += self.specular_reflection(intersection, material, scene, depth + 1)
+            }
+        }
 
         color
     }

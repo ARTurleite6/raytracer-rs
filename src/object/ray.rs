@@ -1,7 +1,7 @@
 use crate::helpers::Vec3;
 use std::default::Default;
 
-const ADJUST_VALUE: f32 = 0.0001;
+const ADJUST_VALUE: f64 = 0.0001;
 
 #[derive(Debug, Default, Clone, Copy)]
 pub struct Ray {

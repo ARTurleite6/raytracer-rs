@@ -1,14 +1,15 @@
 # cornell_box.obj and cornell_box.mtl are grabbed from Intel's embree project.
 # original cornell box data
-  # comment
+# comment
 
 # empty line including some space
    
 
-mtllib cornell_box.mtl
+mtllib cornell_box_VI.mtl
 
 o floor
 usemtl white
+#usemtl gold
 v 552.8 0.0   0.0
 v 0.0   0.0   0.0
 v 0.0   0.0 559.2
@@ -25,16 +26,16 @@ v 314.0 0.0 456.0
 v 472.0 0.0 406.0
 
 f 1 2 3 4 
-f 8 7 6 5
-f 12 11 10 9
+#f 8 7 6 5
+#f 12 11 10 9
 
-o light
-usemtl light
-v 343.0 548.0 227.0
-v 343.0 548.0 332.0
-v 213.0 548.0 332.0
-v 213.0 548.0 227.0
-f -4 -3 -2 -1
+#o light
+#usemtl light
+#v 343.0 548.0 227.0
+#v 343.0 548.0 332.0
+#v 213.0 548.0 332.0
+#v 213.0 548.0 227.0
+#f -4 -3 -2 -1
 
 o ceiling
 usemtl white
@@ -77,7 +78,7 @@ v    556.0 548.8   0.0
 f -4 -3 -2 -1
 
 o short_block
-usemtl blue
+usemtl orange
 v    130.0 165.0  65.0
 v     82.0 165.0 225.0
 v    240.0 165.0 272.0
@@ -138,5 +139,14 @@ v    265.0   0.0 296.0
 v    265.0 330.0 296.0
 v    423.0 330.0 247.0
 v    423.0   0.0 247.0
+f -4 -3 -2 -1
+
+# mirror on the left green wall
+o mirror
+usemtl mirror_mat
+v    549.0    20.0 300.0
+v    549.0    20.0  80.0
+v    549.0   270.0  80.0
+v    549.0   270.0 300.0
 f -4 -3 -2 -1
 

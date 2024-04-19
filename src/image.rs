@@ -7,7 +7,7 @@ use std::io::Write;
 pub struct Image {
     width: usize,
     height: usize,
-    image_data: Vec<Vector3<f32>>,
+    image_data: Vec<Vector3<f64>>,
 }
 
 impl Image {
@@ -16,7 +16,7 @@ impl Image {
             return Err("Invalid image size".into());
         }
 
-        let image_data = vec![Vector3::<f32>::default(); width * height];
+        let image_data = vec![Vector3::<f64>::default(); width * height];
         Ok(Self {
             width,
             height,
@@ -28,7 +28,7 @@ impl Image {
         &mut self,
         x: usize,
         y: usize,
-        color: Vector3<f32>,
+        color: Vector3<f64>,
     ) -> Result<(), Box<dyn Error>> {
         if x >= self.width || y >= self.height {
             return Err("Pixel out of bounds".into());
@@ -41,7 +41,7 @@ impl Image {
         &mut self,
         x: usize,
         y: usize,
-        color: Vector3<f32>,
+        color: Vector3<f64>,
     ) -> Result<(), Box<dyn Error>> {
         //TODO: Perguntar ao stor possivel erro
         if x >= self.width || y >= self.height {

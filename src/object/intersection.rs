@@ -16,7 +16,7 @@ pub struct Intersection {
     geometry_normal: Vec3,
     shading_normal: Vec3,
     w_outgoing: Vec3,
-    depth: f32,
+    depth: f64,
     pub brdf: Option<MaterialInformation>,
     face_id: usize,
 }
@@ -27,7 +27,7 @@ impl Intersection {
         geometry_normal: Vec3,
         shading_normal: Vec3,
         w_outgoing: Vec3,
-        depth: f32,
+        depth: f64,
         face_id: usize,
     ) -> Self {
         Self {
@@ -45,7 +45,7 @@ impl Intersection {
         self.face_id
     }
 
-    pub fn depth(&self) -> f32 {
+    pub fn depth(&self) -> f64 {
         self.depth
     }
 
@@ -87,6 +87,6 @@ pub fn get_min_intersection<T: Intersectable>(ray: &Ray, objects: &[T]) -> Optio
     min_intersection
 }
 
-pub fn get_depth(point: &Vec3, ray: &Ray) -> f32 {
+pub fn get_depth(point: &Vec3, ray: &Ray) -> f64 {
     (point - ray.origin()).norm()
 }
