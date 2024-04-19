@@ -4,7 +4,7 @@ use raytracer_lib::raytracer::RayTracer;
 #[derive(Debug, Parser)]
 #[command(version, about, long_about = None)]
 struct Args {
-    #[arg(short, long, default_value = "models/cornell_box.obj")]
+    #[arg(short, long, default_value = "models/cornell_box_VI.obj")]
     model: String,
     #[arg(short, long, default_value = "camera.json")]
     camera: String,

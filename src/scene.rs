@@ -39,16 +39,11 @@ impl Scene {
         &self.lights
     }
 
-    pub fn visibility(&self, ray: &Ray, max_l: f32) -> bool {
+    pub fn visibility(&self, ray: &Ray, max_l: f64) -> bool {
         !self.objects.iter().any(|object| {
-            object.intersect(ray).map_or(false, |intersection| {
-                if intersection.depth() < max_l {
-                    dbg!(&object, &intersection, max_l, ray);
-                    true
-                } else {
-                    false
-                }
-            })
+            object
+                .intersect(ray)
+                .map_or(false, |intersection| intersection.depth() < max_l)
         })
     }
 
@@ -75,8 +70,7 @@ impl Scene {
         Ok(scene)
     }
 
-    pub fn cast_ray(&self, x: usize, y: usize, jitter: Vector2<f32>) -> Option<Intersection> {
-        let ray = self.camera.get_ray(x, y, jitter);
+    pub fn trace(&self, ray: &Ray) -> Option<Intersection> {
         let mut intersection = get_min_intersection(&ray, &self.objects)?;
 
         if let Some(MaterialInformation {
@@ -90,5 +84,23 @@ impl Scene {
             });
         }
         Some(intersection)
+    }
+
+    pub fn cast_ray(&self, x: usize, y: usize, jitter: Vector2<f64>) -> Option<Intersection> {
+        let ray = self.camera.get_ray(x, y, jitter);
+        self.trace(&ray)
+        //let mut intersection = get_min_intersection(&ray, &self.objects)?;
+
+        //if let Some(MaterialInformation {
+        //    material_id,
+        //    material: _,
+        //}) = &mut intersection.brdf
+        //{
+        //    intersection.brdf = Some(MaterialInformation {
+        //        material_id: *material_id,
+        //        material: Some(self.materials[*material_id].clone()),
+        //    });
+        //}
+        //Some(intersection)
     }
 }

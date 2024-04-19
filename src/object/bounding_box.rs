@@ -1,19 +1,19 @@
-use nalgebra::Vector3;
+use crate::helpers::Vec3;
 
 use super::ray::Ray;
 
 #[derive(Debug, Default)]
 pub struct BoundingBox {
-    min: Vector3<f32>,
-    max: Vector3<f32>,
+    min: Vec3,
+    max: Vec3,
 }
 
 impl BoundingBox {
-    pub fn new(min: Vector3<f32>, max: Vector3<f32>) -> Self {
+    pub fn new(min: Vec3, max: Vec3) -> Self {
         Self { min, max }
     }
 
-    pub fn get_min_max(&self) -> (Vector3<f32>, Vector3<f32>) {
+    pub fn get_min_max(&self) -> (Vec3, Vec3) {
         (self.min, self.max)
     }
 

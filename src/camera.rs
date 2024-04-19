@@ -8,17 +8,17 @@ use crate::{
 
 #[derive(Debug, Deserialize)]
 struct MyVec3 {
-    x: f32,
-    y: f32,
-    z: f32,
+    x: f64,
+    y: f64,
+    z: f64,
 }
 
 #[derive(Deserialize, Debug)]
 pub struct CameraArgs {
     width: usize,
     height: usize,
-    angle_x: f32,
-    angle_y: f32,
+    angle_x: f64,
+    angle_y: f64,
     position: MyVec3,
     up: MyVec3,
     look_at: MyVec3,
@@ -47,8 +47,8 @@ pub struct Camera {
     position: Vec3,
     width: usize,
     height: usize,
-    angle_w: f32,
-    angle_h: f32,
+    angle_w: f64,
+    angle_h: f64,
     up: Vec3,
     forward: Vec3,
     right: Vec3,
@@ -59,8 +59,8 @@ impl Camera {
     pub fn new(
         width: usize,
         height: usize,
-        angle_x: f32,
-        angle_y: f32,
+        angle_x: f64,
+        angle_y: f64,
         position: Vec3,
         up: Vec3,
         look_at: Vec3,
@@ -85,11 +85,11 @@ impl Camera {
         }
     }
 
-    pub fn get_ray(&self, x: usize, y: usize, _jitter: Vector2<f32>) -> Ray {
-        let xf = x as f32;
-        let yf = y as f32;
-        let xs = (2.0 * (xf) / self.width as f32) - 1.0;
-        let ys = (2.0 * (self.height as f32 - yf - 1.0) / self.height as f32) - 1.0;
+    pub fn get_ray(&self, x: usize, y: usize, _jitter: Vector2<f64>) -> Ray {
+        let xf = x as f64;
+        let yf = y as f64;
+        let xs = (2.0 * (xf) / self.width as f64) - 1.0;
+        let ys = (2.0 * (self.height as f64 - yf - 1.0) / self.height as f64) - 1.0;
 
         let xc = xs * self.angle_w;
         let yc = ys * self.angle_h;

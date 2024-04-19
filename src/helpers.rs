@@ -1,5 +1,5 @@
-pub type Vec3 = nalgebra::Vector3<f32>;
-pub type Mat3 = nalgebra::Matrix3<f32>;
+pub type Vec3 = nalgebra::Vector3<f64>;
+pub type Mat3 = nalgebra::Matrix3<f64>;
 pub type Color = Vec3;
 
 pub fn face_forward(v1: Vec3, v2: Vec3) -> Vec3 {
@@ -7,6 +7,16 @@ pub fn face_forward(v1: Vec3, v2: Vec3) -> Vec3 {
         -1.0 * v1
     } else {
         v1
+    }
+}
+
+pub trait Zeroable {
+    fn is_zero(&self) -> bool;
+}
+
+impl Zeroable for [f32; 3] {
+    fn is_zero(&self) -> bool {
+        *self == [0.0, 0.0, 0.0]
     }
 }
 

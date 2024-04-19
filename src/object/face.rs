@@ -8,24 +8,24 @@ use super::{
     ray::Ray,
 };
 
-const EPSILON: f32 = 0.0001;
+const EPSILON: f64 = 0.0001;
 
 #[derive(Debug)]
 pub struct Face {
     face_id: usize,
-    vertex: [Vector3<f32>; 3],
+    vertex: [Vec3; 3],
     normal: Vec3,
-    // normal_coordinates: Option<[Vector3<f32>; 3]>,
-    // texture_coordinates: Option<[Vector2<f32>; 3]>,
+    // normal_coordinates: Option<[Vector3<f64>; 3]>,
+    // texture_coordinates: Option<[Vector2<f64>; 3]>,
     bounding_box: BoundingBox,
 }
 
 impl Face {
     pub fn new(
         face_id: usize,
-        vertex: [Vector3<f32>; 3],
-        normal_coordinates: Option<[Vector3<f32>; 3]>,
-        texture_coordinates: Option<[Vector2<f32>; 3]>,
+        vertex: [Vec3; 3],
+        normal_coordinates: Option<[Vec3; 3]>,
+        texture_coordinates: Option<[Vec3; 3]>,
     ) -> Self {
         let bounding_box = BoundingBox::new(
             vertex.iter().fold(vertex[0], |acc, new_vertex| {

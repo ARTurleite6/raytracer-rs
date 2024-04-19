@@ -28,10 +28,10 @@ impl Renderer {
         for y in 0..height {
             for x in 0..width {
                 let mut rng = rand::thread_rng();
-                let jitter = Vector2::new(rng.gen::<f32>(), rng.gen::<f32>());
+                let jitter = Vector2::new(rng.gen::<f64>(), rng.gen::<f64>());
                 // let ray = self.camera.get_ray(w as f64, h as f64);
                 let intersection = self.scene.cast_ray(x, y, jitter);
-                let color = shader.shade(&intersection, &self.scene);
+                let color = shader.shade(&intersection, &self.scene, None);
                 image.set_pixel(x, y, color)?;
             }
         }

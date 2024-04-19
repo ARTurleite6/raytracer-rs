@@ -1,0 +1,42 @@
+newmtl white
+Ka 1 1 1
+Kd .4 .4 .4
+Ks 0 0 0
+
+newmtl red
+Ka 1 0 0
+Kd .4 0 0
+Ks 0 0 0
+
+newmtl green
+Ka 0 1 0
+Kd 0 0.2 0
+Ks 0 0 0
+Ns 1000
+
+newmtl blue
+Ka 0 0 1
+Kd 0 0 .4
+Ks 0 0 0
+
+newmtl orange
+Ka .99 0.65 0
+Kd .5 .32 0
+Ks 0 0 0
+
+newmtl light
+Ka 20 20 20
+Kd 1 1 1
+Ks 0 0 0
+
+newmtl mirror_mat
+Ka 0 0 0
+Kd 0 0 0
+Ks 0.8 0.8 0.8
+Ns 1000
+
+newmtl gold
+Ka 0.828 0.684 0.215
+Kd 0 0 0
+Ks 0.414 0.342 0.107
+Ns 5
