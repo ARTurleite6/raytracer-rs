@@ -1,5 +1,7 @@
 use nalgebra::{Vector2, Vector3};
 
+use crate::helpers::Vec3;
+
 use super::{
     bounding_box::BoundingBox,
     intersection::{Intersectable, Intersection},
@@ -10,8 +12,9 @@ use super::{
 pub struct Face {
     face_id: usize,
     vertex: [Vector3<f32>; 3],
-    normal_coordinates: Option<[Vector3<f32>; 3]>,
-    texture_coordinates: Option<[Vector2<f32>; 3]>,
+    normal: Vec3,
+    // normal_coordinates: Option<[Vector3<f32>; 3]>,
+    // texture_coordinates: Option<[Vector2<f32>; 3]>,
     bounding_box: BoundingBox,
 }
 
@@ -22,6 +25,7 @@ impl Face {
         normal_coordinates: Option<[Vector3<f32>; 3]>,
         texture_coordinates: Option<[Vector2<f32>; 3]>,
     ) -> Self {
+        // TODO: Calculate the normal when creating the face, and normalize it
         let bounding_box = BoundingBox::new(
             vertex.iter().fold(vertex[0], |acc, new_vertex| {
                 Vector3::new(
@@ -38,11 +42,15 @@ impl Face {
                 )
             }),
         );
+
+        let edge_1 = vertex[1] - vertex[0];
+        let edge_2 = vertex[2] - vertex[0];
+        let normal = edge_1.cross(&edge_2).normalize();
+
         Self {
             face_id,
             vertex,
-            texture_coordinates,
-            normal_coordinates,
+            normal,
             bounding_box,
         }
     }
@@ -57,28 +65,44 @@ impl Intersectable for Face {
         if !self.bounding_box.intersect(ray) {
             return None;
         }
+
         let edge_1 = self.vertex[1] - self.vertex[0];
         let edge_2 = self.vertex[2] - self.vertex[0];
-        let plane_normal = edge_1.cross(&edge_2);
-        let det = -ray.direction().dot(&plane_normal);
-        let inv_det = 1.0 / det;
-        let ao = ray.origin() - self.vertex[0];
-        let dao = ao.cross(ray.direction());
-        let u = edge_2.dot(&dao) * inv_det;
-        let v = -edge_1.dot(&dao) * inv_det;
-        let t = ao.dot(&plane_normal) * inv_det;
+        let ray_cross_e2 = ray.direction().cross(&edge_2);
+        let det = edge_1.dot(&ray_cross_e2);
 
-        if t >= 0.0 && u > 0.0 && v > 0.0 && u + v <= 1.0 {
-            let point = ray.origin() + t * ray.direction();
-            return Some(Intersection::new(
-                point,
-                plane_normal,
-                plane_normal,
-                -ray.direction(),
+        if det > -f32::EPSILON && det < f32::EPSILON {
+            return None;
+        }
+
+        let inv_det = 1.0 / det;
+        let s = ray.origin() - self.vertex[0];
+        let u = inv_det * s.dot(&ray_cross_e2);
+        if u < 0.0 || u > 1.0 {
+            return None;
+        }
+
+        let s_cross_e1 = s.cross(&edge_1);
+        let v = inv_det * ray.direction().dot(&s_cross_e1);
+        if v < 0.0 || u + v > 1.0 {
+            return None;
+        }
+
+        let t = inv_det * edge_2.dot(&s_cross_e1);
+
+        if t > f32::EPSILON {
+            let intersection_point = ray.origin() + ray.direction() * t;
+
+            Some(Intersection::new(
+                intersection_point,
+                self.normal,
+                self.normal,
+                -1.0 * ray.direction(),
                 t,
                 self.face_id,
-            ));
+            ))
+        } else {
+            None
         }
-        None
     }
 }

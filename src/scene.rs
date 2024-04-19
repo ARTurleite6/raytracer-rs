@@ -5,8 +5,8 @@ use tobj::{Material, GPU_LOAD_OPTIONS};
 
 use crate::{
     camera::Camera,
-    helpers::Vec3,
-    light::{ambient_light::AmbientLight, Light},
+    helpers::{Color, Vec3},
+    light::{ambient_light::AmbientLight, point_light::PointLight, Light},
     object::{
         intersection::{get_min_intersection, Intersectable, Intersection, MaterialInformation},
         mesh::Mesh,
@@ -40,7 +40,7 @@ impl Scene {
     }
 
     pub fn visibility(&self, ray: &Ray, max_l: f32) -> bool {
-        self.objects.iter().any(|object| {
+        !self.objects.iter().any(|object| {
             object
                 .intersect(ray)
                 .map_or(false, |intersection| intersection.depth() < max_l)
@@ -59,7 +59,13 @@ impl Scene {
 
         scene.objects = models.into_iter().map(Mesh::from).collect();
 
-        scene.lights = vec![Light::Ambient(AmbientLight::new(Vec3::new(0.9, 0.9, 0.9)))];
+        scene.lights = vec![
+            Light::Ambient(AmbientLight::new(Vec3::new(0.05, 0.05, 0.05))),
+            Light::Point(PointLight::new(
+                Color::new(0.65, 0.65, 0.65),
+                Vec3::new(288.0, 508.0, 282.0),
+            )),
+        ];
 
         Ok(scene)
     }
