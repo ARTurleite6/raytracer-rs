@@ -1,4 +1,4 @@
-use nalgebra::{Vector2, Vector3};
+use nalgebra::Vector3;
 
 use crate::helpers::{face_forward, Vec3};
 
@@ -10,22 +10,22 @@ use super::{
 
 const EPSILON: f64 = 0.0001;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Face {
-    face_id: usize,
+    face_id: Option<usize>,
     vertex: [Vec3; 3],
     normal: Vec3,
-    // normal_coordinates: Option<[Vector3<f64>; 3]>,
-    // texture_coordinates: Option<[Vector2<f64>; 3]>,
     bounding_box: BoundingBox,
+    area: f64,
+    is_light: bool,
 }
 
 impl Face {
     pub fn new(
-        face_id: usize,
+        face_id: Option<usize>,
         vertex: [Vec3; 3],
-        normal_coordinates: Option<[Vec3; 3]>,
-        texture_coordinates: Option<[Vec3; 3]>,
+        is_light: bool,
+        normal: Option<Vec3>,
     ) -> Self {
         let bounding_box = BoundingBox::new(
             vertex.iter().fold(vertex[0], |acc, new_vertex| {
@@ -46,18 +46,42 @@ impl Face {
 
         let edge_1 = vertex[1] - vertex[0];
         let edge_2 = vertex[2] - vertex[0];
-        let normal = edge_1.cross(&edge_2).normalize();
+        let normal = normal.unwrap_or(edge_1.cross(&edge_2).normalize());
+
+        let edge_3 = vertex[2] - vertex[1];
+        let a = edge_1.norm();
+        let b = edge_2.norm();
+        let c = edge_3.norm();
+
+        let half_perimeter = (a + b + c) / 2.0;
+        let area =
+            (half_perimeter * (half_perimeter - a) * (half_perimeter - b) * (half_perimeter - c))
+                .sqrt();
 
         Self {
             face_id,
             vertex,
             normal,
             bounding_box,
+            area,
+            is_light,
         }
+    }
+
+    pub fn normal(&self) -> Vec3 {
+        self.normal
+    }
+
+    pub fn vertices(&self) -> [Vec3; 3] {
+        self.vertex
     }
 
     pub fn get_bounding_box(&self) -> &BoundingBox {
         &self.bounding_box
+    }
+
+    pub fn area(&self) -> f64 {
+        self.area
     }
 }
 
@@ -103,6 +127,7 @@ impl Intersectable for Face {
                 wo,
                 t,
                 self.face_id,
+                None,
             ))
         } else {
             None

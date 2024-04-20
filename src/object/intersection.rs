@@ -1,6 +1,6 @@
 use tobj::Material;
 
-use crate::helpers::Vec3;
+use crate::helpers::{Color, Vec3};
 
 use super::ray::Ray;
 
@@ -18,7 +18,9 @@ pub struct Intersection {
     w_outgoing: Vec3,
     depth: f64,
     pub brdf: Option<MaterialInformation>,
-    face_id: usize,
+    face_id: Option<usize>,
+    /// only used if this is an intersection with a light
+    pub light_intensity: Option<Color>,
 }
 
 impl Intersection {
@@ -28,7 +30,8 @@ impl Intersection {
         shading_normal: Vec3,
         w_outgoing: Vec3,
         depth: f64,
-        face_id: usize,
+        face_id: Option<usize>,
+        light_intensity: Option<Color>,
     ) -> Self {
         Self {
             point,
@@ -38,11 +41,12 @@ impl Intersection {
             depth,
             brdf: None,
             face_id,
+            light_intensity,
         }
     }
 
-    pub fn face_id(&self) -> usize {
-        self.face_id
+    pub fn is_light(&self) -> bool {
+        self.light_intensity.is_some()
     }
 
     pub fn depth(&self) -> f64 {

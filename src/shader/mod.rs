@@ -1,6 +1,7 @@
 use crate::{helpers::Color, light::Light, object::intersection::Intersection, scene::Scene};
 
 pub mod ambient_shader;
+pub mod distributed_shader;
 pub mod whitted_shader;
 
 pub trait Shader {

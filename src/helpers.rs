@@ -1,4 +1,5 @@
 pub type Vec3 = nalgebra::Vector3<f64>;
+pub type Vec2 = nalgebra::Vector2<f64>;
 pub type Mat3 = nalgebra::Matrix3<f64>;
 pub type Color = Vec3;
 

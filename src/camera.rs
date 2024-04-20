@@ -85,11 +85,11 @@ impl Camera {
         }
     }
 
-    pub fn get_ray(&self, x: usize, y: usize, _jitter: Vector2<f64>) -> Ray {
+    pub fn get_ray(&self, x: usize, y: usize, jitter: Vector2<f64>) -> Ray {
         let xf = x as f64;
         let yf = y as f64;
-        let xs = (2.0 * (xf) / self.width as f64) - 1.0;
-        let ys = (2.0 * (self.height as f64 - yf - 1.0) / self.height as f64) - 1.0;
+        let xs = (2.0 * (xf + jitter.x) / self.width as f64) - 1.0;
+        let ys = (2.0 * ((self.height as f64 - yf - 1.0) + jitter.y) / self.height as f64) - 1.0;
 
         let xc = xs * self.angle_w;
         let yc = ys * self.angle_h;

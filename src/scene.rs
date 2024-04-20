@@ -6,7 +6,7 @@ use tobj::{Material, GPU_LOAD_OPTIONS};
 use crate::{
     camera::Camera,
     helpers::{Color, Vec3},
-    light::{ambient_light::AmbientLight, point_light::PointLight, Light},
+    light::{ambient_light::AmbientLight, area_light::AreaLight, point_light::PointLight, Light},
     object::{
         intersection::{get_min_intersection, Intersectable, Intersection, MaterialInformation},
         mesh::Mesh,
@@ -61,25 +61,23 @@ impl Scene {
 
         scene.lights = vec![
             Light::Ambient(AmbientLight::new(Vec3::new(0.05, 0.05, 0.05))),
-            Light::Point(PointLight::new(
-                Color::new(0.65, 0.65, 0.65),
-                Vec3::new(288.0, 508.0, 282.0),
+            Light::AreaLight(AreaLight::new(
+                [
+                    Vec3::new(200.0, 508.0, 200.0),
+                    Vec3::new(316.0, 508.0, 200.0),
+                    Vec3::new(316.0, 508.0, 316.0),
+                ],
+                Vec3::new(0.0, -1.0, 0.0),
+                Color::new(1.5, 1.5, 1.5),
             )),
-            Light::Point(PointLight::new(
-                Color::new(0.55, 0.55, 0.55),
-                Vec3::new(200.0, 508.0, 200.0),
-            )),
-            Light::Point(PointLight::new(
-                Color::new(0.55, 0.55, 0.55),
-                Vec3::new(316.0, 508.0, 316.0),
-            )),
-            Light::Point(PointLight::new(
-                Color::new(0.55, 0.55, 0.55),
-                Vec3::new(316.0, 508.0, 200.0),
-            )),
-            Light::Point(PointLight::new(
-                Color::new(0.55, 0.55, 0.55),
-                Vec3::new(200.0, 508.0, 316.0),
+            Light::AreaLight(AreaLight::new(
+                [
+                    Vec3::new(200.0, 508.0, 200.0),
+                    Vec3::new(316.0, 508.0, 316.0),
+                    Vec3::new(200.0, 508.0, 316.0),
+                ],
+                Vec3::new(0.0, -1.0, 0.0),
+                Color::new(1.5, 1.5, 1.5),
             )),
         ];
 
@@ -87,36 +85,44 @@ impl Scene {
     }
 
     pub fn trace(&self, ray: &Ray) -> Option<Intersection> {
-        let mut intersection = get_min_intersection(&ray, &self.objects)?;
+        let geometric_lights: Vec<AreaLight> = self
+            .lights
+            .iter()
+            .filter_map(|light| {
+                if let Light::AreaLight(light) = light {
+                    Some(light.clone())
+                } else {
+                    None
+                }
+            })
+            .collect();
 
-        if let Some(MaterialInformation {
-            material_id,
-            material: _,
-        }) = &mut intersection.brdf
-        {
-            intersection.brdf = Some(MaterialInformation {
-                material_id: *material_id,
-                material: Some(self.materials[*material_id].clone()),
-            });
+        let intersection = get_min_intersection(&ray, &self.objects);
+
+        let light_intersection = get_min_intersection(&ray, &geometric_lights);
+
+        let mut min_intersection = [intersection, light_intersection]
+            .into_iter()
+            .filter_map(|intersection| intersection)
+            .min_by(|a, b| a.depth().total_cmp(&b.depth()))?;
+
+        if !min_intersection.is_light() {
+            if let Some(MaterialInformation {
+                material_id,
+                material: _,
+            }) = &mut min_intersection.brdf
+            {
+                min_intersection.brdf = Some(MaterialInformation {
+                    material_id: *material_id,
+                    material: Some(self.materials[*material_id].clone()),
+                });
+            }
         }
-        Some(intersection)
+        Some(min_intersection)
     }
 
     pub fn cast_ray(&self, x: usize, y: usize, jitter: Vector2<f64>) -> Option<Intersection> {
         let ray = self.camera.get_ray(x, y, jitter);
         self.trace(&ray)
-        //let mut intersection = get_min_intersection(&ray, &self.objects)?;
-
-        //if let Some(MaterialInformation {
-        //    material_id,
-        //    material: _,
-        //}) = &mut intersection.brdf
-        //{
-        //    intersection.brdf = Some(MaterialInformation {
-        //        material_id: *material_id,
-        //        material: Some(self.materials[*material_id].clone()),
-        //    });
-        //}
-        //Some(intersection)
     }
 }

@@ -1,15 +1,20 @@
+use rand::Rng;
 use tobj::Material;
 
-use crate::helpers::{face_forward, mul_vec3_with_rgb, Vec3, Zeroable};
-use crate::object::ray::Ray;
-use crate::scene::Scene;
-use crate::{helpers::Color, light::Light, object::intersection::Intersection, shader::Shader};
+use crate::{
+    helpers::{mul_vec3_with_rgb, Color, Vec2, Vec3, Zeroable},
+    light::{Light, SampleLightResult},
+    object::{intersection::Intersection, ray::Ray},
+    scene::Scene,
+};
 
-pub struct WhittedShader {
+use super::Shader;
+
+pub struct DistributedShader {
     background: Color,
 }
 
-impl WhittedShader {
+impl DistributedShader {
     pub fn new(background: Color) -> Self {
         Self { background }
     }
@@ -70,7 +75,42 @@ impl WhittedShader {
                         }
                     }
                 }
-                _ => {}
+                Light::AreaLight(area_light) => {
+                    if let Some(diffuse) = brdf.diffuse {
+                        if !diffuse.is_zero() {
+                            let mut rng = rand::thread_rng();
+                            let rnd = Vec2::new(rng.gen(), rng.gen());
+
+                            let SampleLightResult {
+                                color: light_color,
+                                point,
+                                pdf,
+                            } = area_light.l(rnd);
+                            let point = point.unwrap();
+
+                            let mut light_dir = point - intersection.point();
+                            let light_distance = light_dir.norm();
+                            light_dir.normalize_mut();
+
+                            let cos_l = light_dir.dot(&intersection.shading_normal());
+                            let cos_l_la = light_dir.dot(&area_light.normal());
+
+                            if cos_l > 0.0 && cos_l_la <= 0.0 {
+                                let mut shadow = Ray::new(intersection.point(), light_dir);
+                                shadow.adjust_origin(intersection.geometric_normal());
+
+                                if scene.visibility(&shadow, light_distance - 0.0001) {
+                                    let diffuse =
+                                        [diffuse[0] as f64, diffuse[1] as f64, diffuse[2] as f64];
+
+                                    color += (mul_vec3_with_rgb(Vec3::from(diffuse), light_color)
+                                        * cos_l)
+                                        / pdf.unwrap();
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -78,33 +118,42 @@ impl WhittedShader {
     }
 }
 
-impl Shader for WhittedShader {
+impl Shader for DistributedShader {
     fn shade(
         &self,
         intersection: &Option<Intersection>,
         scene: &Scene,
         depth: Option<u32>,
     ) -> Color {
-        let depth = depth.unwrap_or(0);
         let mut color = Color::new(0.0, 0.0, 0.0);
 
         let Some(intersection) = intersection else {
             return self.background;
         };
 
+        if intersection.is_light() {
+            // TODO:  return the light intensity stored in the intersection
+            return intersection.light_intensity.unwrap();
+        }
+
         let material = intersection
             .brdf
             .as_ref()
-            .expect("BRDF in the intesection")
+            .expect("brdf in intersection")
             .material
             .as_ref()
-            .expect("Material in the material information");
+            .expect("material in material information");
 
-        color += self.direct_lighting(&intersection, material, scene);
-
-        if let Some(specular_material) = material.specular {
-            if !specular_material.is_zero() && depth < 3 {
+        let depth = depth.unwrap_or(0);
+        if let Some(specular) = material.specular {
+            if !specular.is_zero() && depth < 4 {
                 color += self.specular_reflection(intersection, scene, depth + 1);
+            }
+        }
+
+        if let Some(diffuse) = material.diffuse {
+            if !diffuse.is_zero() {
+                color += self.direct_lighting(intersection, material, scene);
             }
         }
 

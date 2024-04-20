@@ -107,7 +107,7 @@ impl From<Model> for Mesh {
                 ]);
             }
 
-            let texcoords = None;
+            //let texcoords = None;
             // if !mesh.texcoords.is_empty() {
             // texcoords = Some([
             // Vector2::new(
@@ -126,7 +126,7 @@ impl From<Model> for Mesh {
             // }
 
             obj.faces
-                .push(Face::new(face, vertices, normals, texcoords));
+                .push(Face::new(face.into(), vertices, false, None));
 
             next_face = end;
         }

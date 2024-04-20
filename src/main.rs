@@ -8,12 +8,14 @@ struct Args {
     model: String,
     #[arg(short, long, default_value = "camera.json")]
     camera: String,
+    #[arg(short, long, default_value = "10")]
+    samples_per_pixel: usize,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
-    RayTracer::new(&args.model, &args.camera)?.render();
+    RayTracer::new(&args.model, &args.camera, args.samples_per_pixel)?.render();
 
     Ok(())
 }

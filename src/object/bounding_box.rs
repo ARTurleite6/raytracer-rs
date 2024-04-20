@@ -2,7 +2,7 @@ use crate::helpers::Vec3;
 
 use super::ray::Ray;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct BoundingBox {
     min: Vec3,
     max: Vec3,
