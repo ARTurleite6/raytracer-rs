@@ -3,7 +3,7 @@ use std::sync::{Arc, Mutex};
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use nalgebra::Vector2;
 use rand::Rng;
-use rayon::iter::{IntoParallelIterator, ParallelIterator};
+use rayon::iter::{IndexedParallelIterator, IntoParallelIterator, ParallelIterator};
 
 use crate::{
     helpers::{Color, Vec3},
@@ -29,8 +29,6 @@ impl Renderer {
     pub fn render(&self) -> Result<Image, Box<dyn std::error::Error>> {
         let width = self.scene.width();
         let height = self.scene.height();
-        // let shader = AmbientShader::new(Vec3::new(0.05, 0.05, 0.55));
-        // let shader = DistributedShader::new(Vec3::new(0.05, 0.05, 0.55));
         let shader = PathTracerShader::new(Vec3::new(0.05, 0.05, 0.55));
 
         let multi_progress_bar = MultiProgress::new();
@@ -44,22 +42,26 @@ impl Renderer {
         samples_pb.set_style(samples_style);
         pixels_pb.set_style(pixels_style);
 
-        let image_data: Vec<Vec<Color>> = (0..height).into_iter().map(|y| {
-            (0..width).into_iter().map(|x| {
-                let mut color = Color::new(0.0, 0.0, 0.0);
+        let image = Mutex::new(Image::new(width, height)?);
+        (0..height).into_par_iter().for_each(|y| {
+            (0..width).into_par_iter().for_each(|x| {
                 samples_pb.reset();
-                for _ in 0..self.samples_per_pixel {
+                let color = (0..self.samples_per_pixel).into_par_iter().fold(Color::default, |a, _| {
                     let mut rng = rand::thread_rng();
                     let jitter = Vector2::new(rng.gen::<f64>(), rng.gen::<f64>());
                     let intersection = self.scene.cast_ray(x, y, jitter);
-                    color += shader.shade(&intersection, &self.scene, None);
+                    let color = shader.shade(&intersection, &self.scene, None);
                     samples_pb.inc(1);
-                }
-                // image.set_pixel(x, y, color / self.samples_per_pixel as f64)?;
+                    a + color
+                }).reduce(Color::default, |a, b| a + b);
+                image
+                    .lock()
+                    .unwrap()
+                    .set_pixel(x, y, color / self.samples_per_pixel as f64)
+                    .expect("Error setting the pixel color");
                 pixels_pb.inc(1);
-                color / self.samples_per_pixel as f64
-            }).collect()
-        }).collect();
-        Ok(Image::with_image_data(image_data))
+            });
+        });
+        Ok(image.into_inner().unwrap())
     }
 }

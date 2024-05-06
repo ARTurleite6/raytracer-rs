@@ -26,10 +26,7 @@ impl Image {
         })
     }
 
-    pub fn with_image_data(image_data: Vec<Vec<Color>>) -> Self {
-        let height = image_data.len();
-        let width = image_data.get(0).unwrap().len();
-        let image_data = image_data.into_iter().flatten().collect();
+    pub fn with_image_data(image_data: Vec<Color>, width: usize, height: usize) -> Self {
         Self {
             width,
             height,
