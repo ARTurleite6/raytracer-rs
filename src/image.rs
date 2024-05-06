@@ -3,11 +3,13 @@ use std::error::Error;
 use std::fs::File;
 use std::io::Write;
 
+use crate::helpers::Color;
+
 #[derive(Debug)]
 pub struct Image {
     width: usize,
     height: usize,
-    image_data: Vec<Vector3<f64>>,
+    image_data: Vec<Color>,
 }
 
 impl Image {
@@ -16,7 +18,7 @@ impl Image {
             return Err("Invalid image size".into());
         }
 
-        let image_data = vec![Vector3::<f64>::default(); width * height];
+        let image_data = vec![Color::default(); width * height];
         Ok(Self {
             width,
             height,
@@ -24,11 +26,22 @@ impl Image {
         })
     }
 
+    pub fn with_image_data(image_data: Vec<Vec<Color>>) -> Self {
+        let height = image_data.len();
+        let width = image_data.get(0).unwrap().len();
+        let image_data = image_data.into_iter().flatten().collect();
+        Self {
+            width,
+            height,
+            image_data
+        }
+    }
+
     pub fn set_pixel(
         &mut self,
         x: usize,
         y: usize,
-        color: Vector3<f64>,
+        color: Color,
     ) -> Result<(), Box<dyn Error>> {
         if x >= self.width || y >= self.height {
             return Err("Pixel out of bounds".into());
@@ -41,7 +54,7 @@ impl Image {
         &mut self,
         x: usize,
         y: usize,
-        color: Vector3<f64>,
+        color: Color,
     ) -> Result<(), Box<dyn Error>> {
         //TODO: Perguntar ao stor possivel erro
         if x >= self.width || y >= self.height {

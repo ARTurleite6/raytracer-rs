@@ -29,6 +29,17 @@ impl Ray {
         }
     }
 
+    pub fn new_with_adjusted_origin(origin: Vec3, direction: Vec3, normal: Vec3) -> Self {
+        let mut ray = Self {
+            origin,
+            direction,
+            ..Default::default()
+        };
+
+        ray.adjust_origin(normal);
+        ray
+    }
+
     pub fn adjust_origin(&mut self, normal: Vec3) {
         let mut offset = ADJUST_VALUE * normal;
 

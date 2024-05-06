@@ -1,6 +1,6 @@
 use tobj::Material;
 
-use crate::helpers::{face_forward, mul_vec3_with_rgb, Vec3, Zeroable};
+use crate::helpers::{mul_vec3_with_rgb, Vec3, Zeroable};
 use crate::object::ray::Ray;
 use crate::scene::Scene;
 use crate::{helpers::Color, light::Light, object::intersection::Intersection, shader::Shader};

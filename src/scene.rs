@@ -6,7 +6,7 @@ use tobj::{Material, GPU_LOAD_OPTIONS};
 use crate::{
     camera::Camera,
     helpers::{Color, Vec3},
-    light::{ambient_light::AmbientLight, area_light::AreaLight, point_light::PointLight, Light},
+    light::{area_light::AreaLight, Light},
     object::{
         intersection::{get_min_intersection, Intersectable, Intersection, MaterialInformation},
         mesh::Mesh,
@@ -60,24 +60,105 @@ impl Scene {
         scene.objects = models.into_iter().map(Mesh::from).collect();
 
         scene.lights = vec![
-            Light::Ambient(AmbientLight::new(Vec3::new(0.05, 0.05, 0.05))),
+            // Light::Ambient(AmbientLight::new(Vec3::new(0.05, 0.05, 0.05))),
             Light::AreaLight(AreaLight::new(
                 [
-                    Vec3::new(200.0, 508.0, 200.0),
-                    Vec3::new(316.0, 508.0, 200.0),
-                    Vec3::new(316.0, 508.0, 316.0),
+                    Vec3::new(248.0, 548.0, 182.0),
+                    Vec3::new(328.0, 548.0, 262.0),
+                    Vec3::new(248.0, 548.0, 262.0),
                 ],
                 Vec3::new(0.0, -1.0, 0.0),
-                Color::new(1.5, 1.5, 1.5),
+                Color::new(0.2, 0.2, 0.2),
             )),
             Light::AreaLight(AreaLight::new(
                 [
-                    Vec3::new(200.0, 508.0, 200.0),
-                    Vec3::new(316.0, 508.0, 316.0),
-                    Vec3::new(200.0, 508.0, 316.0),
+                    Vec3::new(328., 548., 262.),
+                    Vec3::new(248., 548., 182.),
+                    Vec3::new(328., 548., 182.),
                 ],
                 Vec3::new(0.0, -1.0, 0.0),
-                Color::new(1.5, 1.5, 1.5),
+                Color::new(0.2, 0.2, 0.2),
+            )),
+            Light::AreaLight(AreaLight::new(
+                [
+                    Vec3::new(448., 548., 382.),
+                    Vec3::new(528., 548., 462.),
+                    Vec3::new(448., 548., 462.),
+                ],
+                Vec3::new(0.0, -1.0, 0.0),
+                Color::new(0.2, 0.2, 0.2),
+            )),
+            Light::AreaLight(AreaLight::new(
+                [
+                    Vec3::new(448., 548., 382.),
+                    Vec3::new(528., 548., 462.),
+                    Vec3::new(448., 548., 462.),
+                ],
+                Vec3::new(0.0, -1.0, 0.0),
+                Color::new(0.2, 0.2, 0.2),
+            )),
+            Light::AreaLight(AreaLight::new(
+                [
+                    Vec3::new(528., 548., 462.),
+                    Vec3::new(448., 548., 382.),
+                    Vec3::new(528., 548., 382.),
+                ],
+                Vec3::new(0.0, -1.0, 0.0),
+                Color::new(0.2, 0.2, 0.2),
+            )),
+            Light::AreaLight(AreaLight::new(
+                [
+                    Vec3::new(48., 548., 382.),
+                    Vec3::new(128., 548., 462.),
+                    Vec3::new(48., 548., 462.),
+                ],
+                Vec3::new(0.0, -1.0, 0.0),
+                Color::new(0.2, 0.2, 0.2),
+            )),
+            Light::AreaLight(AreaLight::new(
+                [
+                    Vec3::new(128., 548., 462.),
+                    Vec3::new(48., 548., 382.),
+                    Vec3::new(128., 548., 382.),
+                ],
+                Vec3::new(0.0, -1.0, 0.0),
+                Color::new(0.2, 0.2, 0.2),
+            )),
+            Light::AreaLight(AreaLight::new(
+                [
+                    Vec3::new(48., 548., 82.),
+                    Vec3::new(128., 548., 162.),
+                    Vec3::new(48., 548., 162.),
+                ],
+                Vec3::new(0.0, -1.0, 0.0),
+                Color::new(0.2, 0.2, 0.2),
+            )),
+            Light::AreaLight(AreaLight::new(
+                [
+                    Vec3::new(128., 548., 162.),
+                    Vec3::new(48., 548., 82.),
+                    Vec3::new(128., 548., 82.),
+                ],
+                Vec3::new(0.0, -1.0, 0.0),
+                Color::new(0.2, 0.2, 0.2),
+            )),
+            Light::AreaLight(AreaLight::new(
+                [
+                    Vec3::new(448., 548., 82.),
+                    Vec3::new(528., 548., 162.),
+                    Vec3::new(448., 548., 162.),
+                ],
+                Vec3::new(0.0, -1.0, 0.0),
+                Color::new(0.2, 0.2, 0.2),
+            )),
+            Light::AreaLight(AreaLight::new(
+                [
+                    Vec3::new(528., 548., 162.),
+                    Vec3::new(448., 548., 82.),
+                    Vec3::new(528., 548., 82.),
+                ],
+                Vec3::new(0.0, -1.0, 0.0),
+                Color::new(0.2, 0.2, 0.2),
             )),
         ];
 

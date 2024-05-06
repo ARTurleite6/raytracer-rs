@@ -132,7 +132,6 @@ impl Shader for DistributedShader {
         };
 
         if intersection.is_light() {
-            // TODO:  return the light intensity stored in the intersection
             return intersection.light_intensity.unwrap();
         }
 

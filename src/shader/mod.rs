@@ -2,6 +2,7 @@ use crate::{helpers::Color, light::Light, object::intersection::Intersection, sc
 
 pub mod ambient_shader;
 pub mod distributed_shader;
+pub mod path_tracer_shader;
 pub mod whitted_shader;
 
 pub trait Shader {

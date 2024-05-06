@@ -1,13 +1,43 @@
+use nalgebra::Matrix3;
+
 pub type Vec3 = nalgebra::Vector3<f64>;
 pub type Vec2 = nalgebra::Vector2<f64>;
 pub type Mat3 = nalgebra::Matrix3<f64>;
 pub type Color = Vec3;
 
-pub fn face_forward(v1: Vec3, v2: Vec3) -> Vec3 {
-    if v1.dot(&v2) < 0.0 {
-        -1.0 * v1
-    } else {
-        v1
+pub trait CoordinateSystemProvider {
+    fn coordinate_system(&self) -> (Vec3, Vec3);
+}
+
+pub trait Rotateable {
+    fn rotate(&self, rx: Vec3, ry: Vec3, rz: Vec3) -> Self;
+    fn face_forward(&self, wo: Vec3) -> Self;
+}
+
+impl Rotateable for Vec3 {
+    fn rotate(&self, rx: Vec3, ry: Vec3, rz: Vec3) -> Self {
+        let rotation_matrix = Matrix3::new(rx.x, ry.x, rz.x, rx.y, ry.y, rz.y, rx.z, ry.z, rz.z);
+        rotation_matrix * self
+    }
+
+    fn face_forward(&self, wo: Vec3) -> Self {
+        if self.dot(&wo) < 0.0 {
+            -1. * self
+        } else {
+            *self
+        }
+    }
+}
+
+impl CoordinateSystemProvider for Vec3 {
+    fn coordinate_system(&self) -> (Vec3, Vec3) {
+        let v2 = if self.x.abs() > self.y.abs() {
+            Vec3::new(-self.z, 0.0, self.x) / (self.x * self.x + self.z * self.z).sqrt()
+        } else {
+            Vec3::new(0.0, self.z, -self.y) / (self.y * self.y + self.z * self.z).sqrt()
+        };
+        let v3 = self.cross(&v2);
+        (v2, v3)
     }
 }
 
