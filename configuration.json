@@ -1,0 +1,131 @@
+{
+  "model_file": "models/cornell_box_VI.obj",
+  "samples_per_pixel": 32,
+  "lights": [
+    {
+      "type": "AreaLight",
+
+    }
+  ]
+
+    Light::AreaLight(AreaLight::new(
+        [
+            Vec3::new(248.0, 548.0, 182.0),
+            Vec3::new(328.0, 548.0, 262.0),
+            Vec3::new(248.0, 548.0, 262.0),
+        ],
+        Vec3::new(0.0, -1.0, 0.0),
+        Color::new(0.2, 0.2, 0.2),
+    )),
+    Light::AreaLight(AreaLight::new(
+        [
+            Vec3::new(328., 548., 262.),
+            Vec3::new(248., 548., 182.),
+            Vec3::new(328., 548., 182.),
+        ],
+        Vec3::new(0.0, -1.0, 0.0),
+        Color::new(0.2, 0.2, 0.2),
+    )),
+    Light::AreaLight(AreaLight::new(
+        [
+            Vec3::new(448., 548., 382.),
+            Vec3::new(528., 548., 462.),
+            Vec3::new(448., 548., 462.),
+        ],
+        Vec3::new(0.0, -1.0, 0.0),
+        Color::new(0.2, 0.2, 0.2),
+    )),
+    Light::AreaLight(AreaLight::new(
+        [
+            Vec3::new(448., 548., 382.),
+            Vec3::new(528., 548., 462.),
+            Vec3::new(448., 548., 462.),
+        ],
+        Vec3::new(0.0, -1.0, 0.0),
+        Color::new(0.2, 0.2, 0.2),
+    )),
+    Light::AreaLight(AreaLight::new(
+        [
+            Vec3::new(528., 548., 462.),
+            Vec3::new(448., 548., 382.),
+            Vec3::new(528., 548., 382.),
+        ],
+        Vec3::new(0.0, -1.0, 0.0),
+        Color::new(0.2, 0.2, 0.2),
+    )),
+    Light::AreaLight(AreaLight::new(
+        [
+            Vec3::new(48., 548., 382.),
+            Vec3::new(128., 548., 462.),
+            Vec3::new(48., 548., 462.),
+        ],
+        Vec3::new(0.0, -1.0, 0.0),
+        Color::new(0.2, 0.2, 0.2),
+    )),
+    Light::AreaLight(AreaLight::new(
+        [
+            Vec3::new(128., 548., 462.),
+            Vec3::new(48., 548., 382.),
+            Vec3::new(128., 548., 382.),
+        ],
+        Vec3::new(0.0, -1.0, 0.0),
+        Color::new(0.2, 0.2, 0.2),
+    )),
+    Light::AreaLight(AreaLight::new(
+        [
+            Vec3::new(48., 548., 82.),
+            Vec3::new(128., 548., 162.),
+            Vec3::new(48., 548., 162.),
+        ],
+        Vec3::new(0.0, -1.0, 0.0),
+        Color::new(0.2, 0.2, 0.2),
+    )),
+    Light::AreaLight(AreaLight::new(
+        [
+            Vec3::new(128., 548., 162.),
+            Vec3::new(48., 548., 82.),
+            Vec3::new(128., 548., 82.),
+        ],
+        Vec3::new(0.0, -1.0, 0.0),
+        Color::new(0.2, 0.2, 0.2),
+    )),
+    Light::AreaLight(AreaLight::new(
+        [
+            Vec3::new(448., 548., 82.),
+            Vec3::new(528., 548., 162.),
+            Vec3::new(448., 548., 162.),
+        ],
+        Vec3::new(0.0, -1.0, 0.0),
+        Color::new(0.2, 0.2, 0.2),
+    )),
+    Light::AreaLight(AreaLight::new(
+        [
+            Vec3::new(528., 548., 162.),
+            Vec3::new(448., 548., 82.),
+            Vec3::new(528., 548., 82.),
+        ],
+        Vec3::new(0.0, -1.0, 0.0),
+        Color::new(0.2, 0.2, 0.2),
+    )),
+  "camera": {
+    "position": {
+      "x": 280,
+      "y": 275,
+      "z": -330
+    },
+    "angle_x": 90,
+    "angle_y": 90,
+    "width": 1024,
+    "height": 1024,
+    "look_at": {
+      "x": 280,
+      "y": 265,
+      "z": 0
+    },
+    "up": {
+      "x": 0,
+      "y": 1,
+      "z": 0
+    }
+  }
+}

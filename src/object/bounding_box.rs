@@ -1,8 +1,10 @@
+use serde::Deserialize;
+
 use crate::helpers::Vec3;
 
 use super::ray::Ray;
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Deserialize)]
 pub struct BoundingBox {
     min: Vec3,
     max: Vec3,

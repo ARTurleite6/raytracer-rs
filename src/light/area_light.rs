@@ -1,3 +1,5 @@
+use serde::{Deserialize};
+
 use crate::{
     helpers::{Color, Vec2, Vec3},
     object::{face::Face, intersection::Intersectable},
@@ -5,7 +7,7 @@ use crate::{
 
 use super::SampleLightResult;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct AreaLight {
     gem: Face,
     pdf: f64,

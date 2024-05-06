@@ -1,4 +1,4 @@
-use crate::{helpers::Color, light::Light, object::intersection::Intersection, scene::Scene};
+use crate::{helpers::Color, object::intersection::Intersection, scene::Scene};
 
 pub mod ambient_shader;
 pub mod distributed_shader;

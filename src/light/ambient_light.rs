@@ -1,6 +1,8 @@
+use serde::Deserialize;
+
 use crate::helpers::Vec3;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct AmbientLight {
     color: Vec3,
 }

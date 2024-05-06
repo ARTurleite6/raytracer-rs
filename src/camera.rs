@@ -6,22 +6,15 @@ use crate::{
     object::ray::Ray,
 };
 
-#[derive(Debug, Deserialize)]
-struct MyVec3 {
-    x: f64,
-    y: f64,
-    z: f64,
-}
-
 #[derive(Deserialize, Debug)]
 pub struct CameraArgs {
     width: usize,
     height: usize,
     angle_x: f64,
     angle_y: f64,
-    position: MyVec3,
-    up: MyVec3,
-    look_at: MyVec3,
+    position: Vec3,
+    up: Vec3,
+    look_at: Vec3,
 }
 
 impl From<CameraArgs> for Camera {

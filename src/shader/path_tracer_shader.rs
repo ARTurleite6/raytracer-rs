@@ -80,7 +80,7 @@ impl PathTracerShader {
                                 pdf,
                             } = area_light.l(rnd);
                             let point = point.unwrap();
-                            let i_point = intersection.point();
+                            let _i_point = intersection.point();
 
                             let mut light_dir = point - intersection.point();
                             let light_distance = light_dir.norm();
@@ -239,7 +239,7 @@ impl Shader for PathTracerShader {
 
         if let Some(diffuse) = material.diffuse {
             if !diffuse.is_zero() {
-                color += self.direct_lighting(intersection, &material, scene);
+                color += self.direct_lighting(intersection, material, scene);
             }
         }
 

@@ -4,6 +4,7 @@ mod image;
 mod light;
 mod object;
 pub mod raytracer;
+pub mod configuration;
 mod renderer;
 mod scene;
 mod shader;

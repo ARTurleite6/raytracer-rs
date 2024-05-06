@@ -1,6 +1,6 @@
 use crate::{
     helpers::{mul_vec3_with_rgb, Vec3, Zeroable},
-    light::{ambient_light, Light},
+    light::{Light},
     object::intersection::Intersection,
     scene::Scene,
 };

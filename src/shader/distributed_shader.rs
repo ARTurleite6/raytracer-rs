@@ -30,8 +30,8 @@ impl DistributedShader {
         specular.adjust_origin(gn);
 
         let intersection = scene.trace(&specular);
-        let color = self.shade(&intersection, scene, Some(depth + 1));
-        color
+        
+        self.shade(&intersection, scene, Some(depth + 1))
     }
 
     fn direct_lighting(

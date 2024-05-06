@@ -1,9 +1,9 @@
-use std::sync::{Arc, Mutex};
+use std::sync::{Mutex};
 
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use nalgebra::Vector2;
 use rand::Rng;
-use rayon::iter::{IndexedParallelIterator, IntoParallelIterator, ParallelIterator};
+use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 use crate::{
     helpers::{Color, Vec3},

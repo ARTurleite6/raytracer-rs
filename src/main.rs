@@ -6,6 +6,8 @@ use raytracer_lib::raytracer::RayTracer;
 struct Args {
     #[arg(short, long, default_value = "models/cornell_box_VI.obj")]
     model: String,
+    //#[arg(short, long, default_value = "configuration.json")]
+    //configuration: String,
     #[arg(short, long, default_value = "camera.json")]
     camera: String,
     #[arg(short, long, default_value = "10")]

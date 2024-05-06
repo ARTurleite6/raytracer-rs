@@ -178,13 +178,13 @@ impl Scene {
             })
             .collect();
 
-        let intersection = get_min_intersection(&ray, &self.objects);
+        let intersection = get_min_intersection(ray, &self.objects);
 
-        let light_intersection = get_min_intersection(&ray, &geometric_lights);
+        let light_intersection = get_min_intersection(ray, &geometric_lights);
 
         let mut min_intersection = [intersection, light_intersection]
             .into_iter()
-            .filter_map(|intersection| intersection)
+            .flatten()
             .min_by(|a, b| a.depth().total_cmp(&b.depth()))?;
 
         if !min_intersection.is_light() {

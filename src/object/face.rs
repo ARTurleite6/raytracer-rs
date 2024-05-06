@@ -1,4 +1,5 @@
 use nalgebra::Vector3;
+use serde::Deserialize;
 
 use crate::helpers::{Rotateable, Vec3};
 
@@ -10,7 +11,7 @@ use super::{
 
 const EPSILON: f64 = 0.0001;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct Face {
     face_id: Option<usize>,
     vertex: [Vec3; 3],
@@ -103,7 +104,7 @@ impl Intersectable for Face {
         let inv_det = 1.0 / det;
         let s = ray.origin() - self.vertex[0];
         let u = inv_det * s.dot(&ray_cross_e2);
-        if u < 0.0 || u > 1.0 {
+        if !(0.0..=1.0).contains(&u) {
             return None;
         }
 

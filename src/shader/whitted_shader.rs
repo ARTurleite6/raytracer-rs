@@ -25,8 +25,8 @@ impl WhittedShader {
         specular.adjust_origin(gn);
 
         let intersection = scene.trace(&specular);
-        let color = self.shade(&intersection, scene, Some(depth + 1));
-        color
+        
+        self.shade(&intersection, scene, Some(depth + 1))
     }
 
     fn direct_lighting(
@@ -100,7 +100,7 @@ impl Shader for WhittedShader {
             .as_ref()
             .expect("Material in the material information");
 
-        color += self.direct_lighting(&intersection, material, scene);
+        color += self.direct_lighting(intersection, material, scene);
 
         if let Some(specular_material) = material.specular {
             if !specular_material.is_zero() && depth < 3 {

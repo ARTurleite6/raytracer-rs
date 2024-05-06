@@ -1,6 +1,8 @@
+use serde::Deserialize;
+
 use crate::helpers::{Color, Vec3};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct PointLight {
     color: Color,
     pos: Vec3,
