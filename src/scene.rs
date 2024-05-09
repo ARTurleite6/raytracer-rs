@@ -4,8 +4,7 @@ use nalgebra::Vector2;
 use tobj::{Material, GPU_LOAD_OPTIONS};
 
 use crate::{
-    camera::Camera,
-    helpers::{Color, Vec3},
+    camera::{Camera, CameraArgs},
     light::{area_light::AreaLight, Light},
     object::{
         intersection::{get_min_intersection, Intersectable, Intersection, MaterialInformation},
@@ -23,8 +22,14 @@ pub struct Scene {
 }
 
 impl Scene {
+    pub fn with_camera_args(obj_path: &str, camera_args: CameraArgs, lights: Vec<Light>) -> Self {
+        let camera = camera_args.into();
+        Self::load_obj(obj_path, camera, lights).expect("Error loading model config")
+    }
+
     pub fn new(obj_path: &str, camera_path: &str) -> Result<Self, Box<dyn Error>> {
-        Self::load_obj(obj_path, camera_path)
+        let camera = Camera::load(camera_path)?;
+        Self::load_obj(obj_path, camera, Vec::default())
     }
 
     pub fn width(&self) -> usize {
@@ -47,11 +52,15 @@ impl Scene {
         })
     }
 
-    fn load_obj(obj_path: &str, camera_path: &str) -> Result<Self, Box<dyn Error>> {
+    fn load_obj(
+        obj_path: &str,
+        camera: Camera,
+        lights: Vec<Light>,
+    ) -> Result<Self, Box<dyn Error>> {
         let mut scene = Scene::default();
         let (models, materials) = tobj::load_obj(obj_path, &GPU_LOAD_OPTIONS)?;
 
-        scene.camera = Camera::load(camera_path)?;
+        scene.camera = camera;
         scene.materials = materials?;
 
         println!("# of models: {}", models.len());
@@ -59,108 +68,110 @@ impl Scene {
 
         scene.objects = models.into_iter().map(Mesh::from).collect();
 
-        scene.lights = vec![
-            // Light::Ambient(AmbientLight::new(Vec3::new(0.05, 0.05, 0.05))),
-            Light::AreaLight(AreaLight::new(
-                [
-                    Vec3::new(248.0, 548.0, 182.0),
-                    Vec3::new(328.0, 548.0, 262.0),
-                    Vec3::new(248.0, 548.0, 262.0),
-                ],
-                Vec3::new(0.0, -1.0, 0.0),
-                Color::new(0.2, 0.2, 0.2),
-            )),
-            Light::AreaLight(AreaLight::new(
-                [
-                    Vec3::new(328., 548., 262.),
-                    Vec3::new(248., 548., 182.),
-                    Vec3::new(328., 548., 182.),
-                ],
-                Vec3::new(0.0, -1.0, 0.0),
-                Color::new(0.2, 0.2, 0.2),
-            )),
-            Light::AreaLight(AreaLight::new(
-                [
-                    Vec3::new(448., 548., 382.),
-                    Vec3::new(528., 548., 462.),
-                    Vec3::new(448., 548., 462.),
-                ],
-                Vec3::new(0.0, -1.0, 0.0),
-                Color::new(0.2, 0.2, 0.2),
-            )),
-            Light::AreaLight(AreaLight::new(
-                [
-                    Vec3::new(448., 548., 382.),
-                    Vec3::new(528., 548., 462.),
-                    Vec3::new(448., 548., 462.),
-                ],
-                Vec3::new(0.0, -1.0, 0.0),
-                Color::new(0.2, 0.2, 0.2),
-            )),
-            Light::AreaLight(AreaLight::new(
-                [
-                    Vec3::new(528., 548., 462.),
-                    Vec3::new(448., 548., 382.),
-                    Vec3::new(528., 548., 382.),
-                ],
-                Vec3::new(0.0, -1.0, 0.0),
-                Color::new(0.2, 0.2, 0.2),
-            )),
-            Light::AreaLight(AreaLight::new(
-                [
-                    Vec3::new(48., 548., 382.),
-                    Vec3::new(128., 548., 462.),
-                    Vec3::new(48., 548., 462.),
-                ],
-                Vec3::new(0.0, -1.0, 0.0),
-                Color::new(0.2, 0.2, 0.2),
-            )),
-            Light::AreaLight(AreaLight::new(
-                [
-                    Vec3::new(128., 548., 462.),
-                    Vec3::new(48., 548., 382.),
-                    Vec3::new(128., 548., 382.),
-                ],
-                Vec3::new(0.0, -1.0, 0.0),
-                Color::new(0.2, 0.2, 0.2),
-            )),
-            Light::AreaLight(AreaLight::new(
-                [
-                    Vec3::new(48., 548., 82.),
-                    Vec3::new(128., 548., 162.),
-                    Vec3::new(48., 548., 162.),
-                ],
-                Vec3::new(0.0, -1.0, 0.0),
-                Color::new(0.2, 0.2, 0.2),
-            )),
-            Light::AreaLight(AreaLight::new(
-                [
-                    Vec3::new(128., 548., 162.),
-                    Vec3::new(48., 548., 82.),
-                    Vec3::new(128., 548., 82.),
-                ],
-                Vec3::new(0.0, -1.0, 0.0),
-                Color::new(0.2, 0.2, 0.2),
-            )),
-            Light::AreaLight(AreaLight::new(
-                [
-                    Vec3::new(448., 548., 82.),
-                    Vec3::new(528., 548., 162.),
-                    Vec3::new(448., 548., 162.),
-                ],
-                Vec3::new(0.0, -1.0, 0.0),
-                Color::new(0.2, 0.2, 0.2),
-            )),
-            Light::AreaLight(AreaLight::new(
-                [
-                    Vec3::new(528., 548., 162.),
-                    Vec3::new(448., 548., 82.),
-                    Vec3::new(528., 548., 82.),
-                ],
-                Vec3::new(0.0, -1.0, 0.0),
-                Color::new(0.2, 0.2, 0.2),
-            )),
-        ];
+        scene.lights = lights;
+
+        // scene.lights = vec![
+        //     // Light::Ambient(AmbientLight::new(Vec3::new(0.05, 0.05, 0.05))),
+        //     Light::AreaLight(AreaLight::with_normal(
+        //         [
+        //             Vec3::new(248.0, 548.0, 182.0),
+        //             Vec3::new(328.0, 548.0, 262.0),
+        //             Vec3::new(248.0, 548.0, 262.0),
+        //         ],
+        //         Vec3::new(0.0, -1.0, 0.0),
+        //         Color::new(0.2, 0.2, 0.2),
+        //     )),
+        //     Light::AreaLight(AreaLight::with_normal(
+        //         [
+        //             Vec3::new(328., 548., 262.),
+        //             Vec3::new(248., 548., 182.),
+        //             Vec3::new(328., 548., 182.),
+        //         ],
+        //         Vec3::new(0.0, -1.0, 0.0),
+        //         Color::new(0.2, 0.2, 0.2),
+        //     )),
+        //     Light::AreaLight(AreaLight::with_normal(
+        //         [
+        //             Vec3::new(448., 548., 382.),
+        //             Vec3::new(528., 548., 462.),
+        //             Vec3::new(448., 548., 462.),
+        //         ],
+        //         Vec3::new(0.0, -1.0, 0.0),
+        //         Color::new(0.2, 0.2, 0.2),
+        //     )),
+        //     Light::AreaLight(AreaLight::with_normal(
+        //         [
+        //             Vec3::new(448., 548., 382.),
+        //             Vec3::new(528., 548., 462.),
+        //             Vec3::new(448., 548., 462.),
+        //         ],
+        //         Vec3::new(0.0, -1.0, 0.0),
+        //         Color::new(0.2, 0.2, 0.2),
+        //     )),
+        //     Light::AreaLight(AreaLight::with_normal(
+        //         [
+        //             Vec3::new(528., 548., 462.),
+        //             Vec3::new(448., 548., 382.),
+        //             Vec3::new(528., 548., 382.),
+        //         ],
+        //         Vec3::new(0.0, -1.0, 0.0),
+        //         Color::new(0.2, 0.2, 0.2),
+        //     )),
+        //     Light::AreaLight(AreaLight::with_normal(
+        //         [
+        //             Vec3::new(48., 548., 382.),
+        //             Vec3::new(128., 548., 462.),
+        //             Vec3::new(48., 548., 462.),
+        //         ],
+        //         Vec3::new(0.0, -1.0, 0.0),
+        //         Color::new(0.2, 0.2, 0.2),
+        //     )),
+        //     Light::AreaLight(AreaLight::with_normal(
+        //         [
+        //             Vec3::new(128., 548., 462.),
+        //             Vec3::new(48., 548., 382.),
+        //             Vec3::new(128., 548., 382.),
+        //         ],
+        //         Vec3::new(0.0, -1.0, 0.0),
+        //         Color::new(0.2, 0.2, 0.2),
+        //     )),
+        //     Light::AreaLight(AreaLight::with_normal(
+        //         [
+        //             Vec3::new(48., 548., 82.),
+        //             Vec3::new(128., 548., 162.),
+        //             Vec3::new(48., 548., 162.),
+        //         ],
+        //         Vec3::new(0.0, -1.0, 0.0),
+        //         Color::new(0.2, 0.2, 0.2),
+        //     )),
+        //     Light::AreaLight(AreaLight::with_normal(
+        //         [
+        //             Vec3::new(128., 548., 162.),
+        //             Vec3::new(48., 548., 82.),
+        //             Vec3::new(128., 548., 82.),
+        //         ],
+        //         Vec3::new(0.0, -1.0, 0.0),
+        //         Color::new(0.2, 0.2, 0.2),
+        //     )),
+        //     Light::AreaLight(AreaLight::with_normal(
+        //         [
+        //             Vec3::new(448., 548., 82.),
+        //             Vec3::new(528., 548., 162.),
+        //             Vec3::new(448., 548., 162.),
+        //         ],
+        //         Vec3::new(0.0, -1.0, 0.0),
+        //         Color::new(0.2, 0.2, 0.2),
+        //     )),
+        //     Light::AreaLight(AreaLight::with_normal(
+        //         [
+        //             Vec3::new(528., 548., 162.),
+        //             Vec3::new(448., 548., 82.),
+        //             Vec3::new(528., 548., 82.),
+        //         ],
+        //         Vec3::new(0.0, -1.0, 0.0),
+        //         Color::new(0.2, 0.2, 0.2),
+        //     )),
+        // ];
 
         Ok(scene)
     }

@@ -11,6 +11,49 @@ use super::{
 
 const EPSILON: f64 = 0.0001;
 
+#[derive(Debug, Default)]
+pub struct FaceBuilder {
+    face_id: Option<usize>,
+    vertex: [Vec3; 3],
+    normal: Option<Vec3>,
+    is_light: bool,
+}
+
+impl FaceBuilder {
+    pub fn new(vertex: [Vec3; 3]) -> Self {
+        Self {
+            vertex,
+            is_light: false,
+            ..Default::default()
+        }
+    }
+
+    pub fn is_light(mut self) -> Self {
+        self.is_light = true;
+        self
+    }
+
+    pub fn normal(mut self, normal: Vec3) -> Self {
+        self.normal = Some(normal);
+        self
+    }
+
+    pub fn face_id(mut self, face_id: usize) -> Self {
+        self.face_id = Some(face_id);
+        self
+    }
+
+    pub fn build(self) -> Face {
+        self.into()
+    }
+}
+
+impl From<FaceBuilder> for Face {
+    fn from(value: FaceBuilder) -> Self {
+        Self::new(value.face_id, value.vertex, value.is_light, value.normal)
+    }
+}
+
 #[derive(Debug, Clone, Deserialize)]
 pub struct Face {
     face_id: Option<usize>,
