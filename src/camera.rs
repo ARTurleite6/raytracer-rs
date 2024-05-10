@@ -36,15 +36,11 @@ impl From<CameraArgs> for Camera {
 
 #[derive(Debug, Default)]
 pub struct Camera {
-    look_at: Vec3,
     position: Vec3,
     width: usize,
     height: usize,
     angle_w: f64,
     angle_h: f64,
-    up: Vec3,
-    forward: Vec3,
-    right: Vec3,
     camera_to_world: Mat3,
 }
 
@@ -65,15 +61,11 @@ impl Camera {
         let camera_to_world = Mat3::from_columns(&[right, up, forward]);
 
         Self {
-            look_at,
             position,
             width,
             height,
             angle_w,
             angle_h,
-            up,
-            forward,
-            right,
             camera_to_world,
         }
     }
@@ -87,11 +79,9 @@ impl Camera {
         let xc = xs * self.angle_w;
         let yc = ys * self.angle_h;
 
-        Ray::new_with_coords(
+        Ray::new(
             self.position,
             self.camera_to_world * Vec3::new(xc, yc, 1.0).normalize(),
-            x,
-            y,
         )
     }
 

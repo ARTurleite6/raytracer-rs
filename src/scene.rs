@@ -181,7 +181,7 @@ impl Scene {
             .lights
             .iter()
             .filter_map(|light| {
-                if let Light::AreaLight(light) = light {
+                if let Light::Area(light) = light {
                     Some(light.clone())
                 } else {
                     None

@@ -16,26 +16,14 @@ pub struct FaceBuilder {
     face_id: Option<usize>,
     vertex: [Vec3; 3],
     normal: Option<Vec3>,
-    is_light: bool,
 }
 
 impl FaceBuilder {
     pub fn new(vertex: [Vec3; 3]) -> Self {
         Self {
             vertex,
-            is_light: false,
             ..Default::default()
         }
-    }
-
-    pub fn is_light(mut self) -> Self {
-        self.is_light = true;
-        self
-    }
-
-    pub fn normal(mut self, normal: Vec3) -> Self {
-        self.normal = Some(normal);
-        self
     }
 
     pub fn face_id(mut self, face_id: usize) -> Self {
@@ -50,27 +38,20 @@ impl FaceBuilder {
 
 impl From<FaceBuilder> for Face {
     fn from(value: FaceBuilder) -> Self {
-        Self::new(value.face_id, value.vertex, value.is_light, value.normal)
+        Self::new(value.vertex, value.normal)
     }
 }
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct Face {
-    face_id: Option<usize>,
     vertex: [Vec3; 3],
     normal: Vec3,
     bounding_box: BoundingBox,
     area: f64,
-    is_light: bool,
 }
 
 impl Face {
-    pub fn new(
-        face_id: Option<usize>,
-        vertex: [Vec3; 3],
-        is_light: bool,
-        normal: Option<Vec3>,
-    ) -> Self {
+    pub fn new(vertex: [Vec3; 3], normal: Option<Vec3>) -> Self {
         let bounding_box = BoundingBox::new(
             vertex.iter().fold(vertex[0], |acc, new_vertex| {
                 Vector3::new(
@@ -103,12 +84,10 @@ impl Face {
                 .sqrt();
 
         Self {
-            face_id,
             vertex,
             normal,
             bounding_box,
             area,
-            is_light,
         }
     }
 
@@ -170,7 +149,6 @@ impl Intersectable for Face {
                 normal,
                 wo,
                 t,
-                self.face_id,
                 None,
             ))
         } else {

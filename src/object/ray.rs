@@ -5,36 +5,17 @@ const ADJUST_VALUE: f64 = 0.0001;
 
 #[derive(Debug, Default, Clone, Copy)]
 pub struct Ray {
-    x: usize,
-    y: usize,
     origin: Vec3,
     direction: Vec3,
 }
 
 impl Ray {
     pub fn new(origin: Vec3, direction: Vec3) -> Self {
-        Self {
-            origin,
-            direction,
-            ..Default::default()
-        }
-    }
-
-    pub fn new_with_coords(origin: Vec3, direction: Vec3, x: usize, y: usize) -> Self {
-        Self {
-            origin,
-            direction,
-            x,
-            y,
-        }
+        Self { origin, direction }
     }
 
     pub fn new_with_adjusted_origin(origin: Vec3, direction: Vec3, normal: Vec3) -> Self {
-        let mut ray = Self {
-            origin,
-            direction,
-            ..Default::default()
-        };
+        let mut ray = Self { origin, direction };
 
         ray.adjust_origin(normal);
         ray

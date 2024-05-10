@@ -1,6 +1,6 @@
 use crate::{
     helpers::{mul_vec3_with_rgb, Vec3, Zeroable},
-    light::{Light},
+    light::Light,
     object::intersection::Intersection,
     scene::Scene,
 };
@@ -12,6 +12,7 @@ pub struct AmbientShader {
 }
 
 impl AmbientShader {
+    #[allow(dead_code)]
     pub fn new(background_color: Color) -> Self {
         Self { background_color }
     }

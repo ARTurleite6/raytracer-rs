@@ -19,7 +19,6 @@ fn load_configuration(configuration_path: &str) -> Configuration {
     let reader = std::io::BufReader::new(file);
     serde_json::from_reader::<std::io::BufReader<std::fs::File>, Configuration>(reader)
         .expect("Error loading Configuration file")
-        .into()
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {

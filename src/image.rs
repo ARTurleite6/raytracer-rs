@@ -26,38 +26,11 @@ impl Image {
         })
     }
 
-    pub fn with_image_data(image_data: Vec<Color>, width: usize, height: usize) -> Self {
-        Self {
-            width,
-            height,
-            image_data
-        }
-    }
-
-    pub fn set_pixel(
-        &mut self,
-        x: usize,
-        y: usize,
-        color: Color,
-    ) -> Result<(), Box<dyn Error>> {
+    pub fn set_pixel(&mut self, x: usize, y: usize, color: Color) -> Result<(), Box<dyn Error>> {
         if x >= self.width || y >= self.height {
             return Err("Pixel out of bounds".into());
         }
         self.image_data[y * self.width + x] = color;
-        Ok(())
-    }
-
-    pub fn add_pixel(
-        &mut self,
-        x: usize,
-        y: usize,
-        color: Color,
-    ) -> Result<(), Box<dyn Error>> {
-        //TODO: Perguntar ao stor possivel erro
-        if x >= self.width || y >= self.height {
-            return Err("Pixel out of bounds".into());
-        }
-        self.image_data[y * self.width + x] += color;
         Ok(())
     }
 

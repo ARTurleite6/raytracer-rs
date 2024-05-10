@@ -68,7 +68,7 @@ impl PathTracerShader {
                         }
                     }
                 }
-                Light::AreaLight(area_light) => {
+                Light::Area(area_light) => {
                     if let Some(diffuse) = brdf.diffuse {
                         if !diffuse.is_zero() {
                             let mut rng = rand::thread_rng();

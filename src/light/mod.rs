@@ -21,14 +21,14 @@ pub struct SampleLightResult {
 pub enum LightArgs {
     Ambient(AmbientLight),
     Point(PointLight),
-    AreaLight(AreaLightArgs),
+    Area(AreaLightArgs),
 }
 
 #[derive(Debug)]
 pub enum Light {
     Ambient(AmbientLight),
     Point(PointLight),
-    AreaLight(AreaLight),
+    Area(AreaLight),
 }
 
 impl From<LightArgs> for Light {
@@ -36,7 +36,7 @@ impl From<LightArgs> for Light {
         match value {
             LightArgs::Point(point_light) => Light::Point(point_light),
             LightArgs::Ambient(ambient_light) => Light::Ambient(ambient_light),
-            LightArgs::AreaLight(area_light_args) => Light::AreaLight(area_light_args.into()),
+            LightArgs::Area(area_light_args) => Light::Area(area_light_args.into()),
         }
     }
 }

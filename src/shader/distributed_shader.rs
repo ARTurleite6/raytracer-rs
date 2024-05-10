@@ -15,6 +15,7 @@ pub struct DistributedShader {
 }
 
 impl DistributedShader {
+    #[allow(dead_code)]
     pub fn new(background: Color) -> Self {
         Self { background }
     }
@@ -30,7 +31,7 @@ impl DistributedShader {
         specular.adjust_origin(gn);
 
         let intersection = scene.trace(&specular);
-        
+
         self.shade(&intersection, scene, Some(depth + 1))
     }
 
@@ -75,7 +76,7 @@ impl DistributedShader {
                         }
                     }
                 }
-                Light::AreaLight(area_light) => {
+                Light::Area(area_light) => {
                     if let Some(diffuse) = brdf.diffuse {
                         if !diffuse.is_zero() {
                             let mut rng = rand::thread_rng();

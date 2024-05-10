@@ -16,9 +16,9 @@ pub struct AreaLightArgs {
     power: Color,
 }
 
-impl Into<AreaLight> for AreaLightArgs {
-    fn into(self) -> AreaLight {
-        AreaLight::new(self.vertex, self.power)
+impl From<AreaLightArgs> for AreaLight {
+    fn from(value: AreaLightArgs) -> Self {
+        Self::new(value.vertex, value.power)
     }
 }
 
@@ -33,18 +33,6 @@ pub struct AreaLight {
 impl AreaLight {
     pub fn new(vertex: [Vec3; 3], power: Vec3) -> Self {
         let gem = FaceBuilder::new(vertex).build();
-        let pdf = 1.0 / gem.area();
-        let intensity = power * pdf;
-        Self {
-            gem,
-            pdf,
-            intensity,
-            power,
-        }
-    }
-
-    pub fn with_normal(vertex: [Vec3; 3], normal: Vec3, power: Vec3) -> Self {
-        let gem = FaceBuilder::new(vertex).normal(normal).build();
         let pdf = 1.0 / gem.area();
         let intensity = power * pdf;
         Self {

@@ -3,7 +3,7 @@
   "samples_per_pixel": 32,
   "lights": [
     {
-      "type": "AreaLight",
+      "type": "Area",
       "vertex": [
         [
           248.0,
@@ -28,7 +28,7 @@
       ]
     },
     {
-      "type": "AreaLight",
+      "type": "Area",
       "vertex": [
         [
           328.0,
@@ -53,7 +53,7 @@
       ]
     },
     {
-      "type": "AreaLight",
+      "type": "Area",
       "vertex": [
         [
           448.0,
@@ -78,7 +78,7 @@
       ]
     },
     {
-      "type": "AreaLight",
+      "type": "Area",
       "vertex": [
         [
           448.0,
@@ -103,7 +103,7 @@
       ]
     },
     {
-      "type": "AreaLight",
+      "type": "Area",
       "vertex": [
         [
           528.0,
@@ -128,7 +128,7 @@
       ]
     },
     {
-      "type": "AreaLight",
+      "type": "Area",
       "vertex": [
         [
           48.0,
@@ -153,7 +153,7 @@
       ]
     },
     {
-      "type": "AreaLight",
+      "type": "Area",
       "vertex": [
         [
           128.0,
@@ -178,7 +178,7 @@
       ]
     },
     {
-      "type": "AreaLight",
+      "type": "Area",
       "vertex": [
         [
           48.0,
@@ -203,7 +203,7 @@
       ]
     },
     {
-      "type": "AreaLight",
+      "type": "Area",
       "vertex": [
         [
           128.0,
@@ -228,7 +228,7 @@
       ]
     },
     {
-      "type": "AreaLight",
+      "type": "Area",
       "vertex": [
         [
           448.0,
@@ -253,7 +253,7 @@
       ]
     },
     {
-      "type": "AreaLight",
+      "type": "Area",
       "vertex": [
         [
           528.0,

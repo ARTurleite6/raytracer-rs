@@ -1,4 +1,7 @@
-use super::intersection::{get_min_intersection, Intersectable, MaterialInformation};
+use super::{
+    face::FaceBuilder,
+    intersection::{get_min_intersection, Intersectable, MaterialInformation},
+};
 use nalgebra::Vector3;
 use tobj::Model;
 
@@ -8,7 +11,6 @@ use crate::helpers::Comparable;
 #[derive(Debug, Default)]
 pub struct Mesh {
     material_id: Option<usize>,
-    name: String,
     faces: Vec<Face>,
     bounding_box: BoundingBox,
 }
@@ -45,10 +47,6 @@ impl Mesh {
 
         self.bounding_box = BoundingBox::new(min_vert, max_vert);
     }
-
-    fn material_id(&self) -> Option<usize> {
-        self.material_id
-    }
 }
 
 impl From<Model> for Mesh {
@@ -57,14 +55,13 @@ impl From<Model> for Mesh {
         let mesh = &model.mesh;
 
         let mut obj = Self {
-            name: model.name.clone(),
             material_id: mesh.material_id,
             ..Default::default()
         };
 
         obj.faces.reserve(mesh.indices.len() / 3);
         let mut next_face = 0;
-        for (_i, face) in (0..mesh.indices.len() / 3).enumerate() {
+        for face in 0..mesh.indices.len() / 3 {
             let end = next_face + 3;
             let face_indices = &indices[next_face..end];
 
@@ -86,47 +83,8 @@ impl From<Model> for Mesh {
                 ),
             ];
 
-            let mut normals = None;
-            if !mesh.normals.is_empty() {
-                normals = Some([
-                    Vector3::new(
-                        mesh.normals[(face_indices[0] * 3) as usize] as f64,
-                        mesh.normals[(face_indices[0] * 3 + 1) as usize] as f64,
-                        mesh.normals[(face_indices[0] * 3 + 2) as usize] as f64,
-                    ),
-                    Vector3::new(
-                        mesh.normals[(face_indices[1] * 3) as usize] as f64,
-                        mesh.normals[(face_indices[1] * 3 + 1) as usize] as f64,
-                        mesh.normals[(face_indices[1] * 3 + 2) as usize] as f64,
-                    ),
-                    Vector3::new(
-                        mesh.normals[(face_indices[2] * 3) as usize] as f64,
-                        mesh.normals[(face_indices[2] * 3 + 1) as usize] as f64,
-                        mesh.normals[(face_indices[2] * 3 + 2) as usize] as f64,
-                    ),
-                ]);
-            }
-
-            //let texcoords = None;
-            // if !mesh.texcoords.is_empty() {
-            // texcoords = Some([
-            // Vector2::new(
-            // mesh.texcoords[(face_indices[0] * 2) as usize],
-            // mesh.texcoords[(face_indices[0] * 2 + 1) as usize],
-            // ),
-            // Vector2::new(
-            // mesh.texcoords[(face_indices[1] * 2) as usize],
-            // mesh.texcoords[(face_indices[1] * 2 + 1) as usize],
-            // ),
-            // Vector2::new(
-            // mesh.texcoords[(face_indices[2] * 2) as usize],
-            // mesh.texcoords[(face_indices[2] * 2 + 1) as usize],
-            // ),
-            // ]);
-            // }
-
             obj.faces
-                .push(Face::new(face.into(), vertices, false, None));
+                .push(FaceBuilder::new(vertices).face_id(face).build());
 
             next_face = end;
         }

@@ -10,6 +10,7 @@ pub struct WhittedShader {
 }
 
 impl WhittedShader {
+    #[allow(dead_code)]
     pub fn new(background: Color) -> Self {
         Self { background }
     }
@@ -25,7 +26,7 @@ impl WhittedShader {
         specular.adjust_origin(gn);
 
         let intersection = scene.trace(&specular);
-        
+
         self.shade(&intersection, scene, Some(depth + 1))
     }
 
