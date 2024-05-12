@@ -1,75 +1,61 @@
+use std::f64::consts::PI;
+
 use rand::Rng;
 use tobj::Material;
 
 use crate::{
     helpers::{Color, CoordinateSystemProvider, Rotateable, Vec2, Vec3, Zeroable},
-    light::{Light, SampleLightResult},
+    light::{
+        light_sampler::{LightSampler, SampleLight},
+        Light, SampleLightResult,
+    },
     object::{intersection::Intersection, ray::Ray},
     scene::Scene,
 };
 
-use std::f64::consts::PI;
-
 use super::Shader;
 
 type Brdf = [f32; 3];
+
 const MAX_DEPTH: u32 = 2;
 
-pub struct PathTracerShader {
-    background: Color,
+pub struct PathTracer {
+    background_color: Color,
     continue_p: f64,
 }
 
-impl PathTracerShader {
-    pub fn new(background: Color) -> Self {
+impl PathTracer {
+    pub fn new(background_color: Color) -> Self {
         Self {
-            background,
+            background_color,
             continue_p: 0.5,
         }
     }
 
-    fn direct_lighting(
+    pub fn direct_lighting(
         &self,
         intersection: &Intersection,
-        brdf: &Material,
+        material: &Material,
         scene: &Scene,
     ) -> Color {
         let mut color = Color::new(0.0, 0.0, 0.0);
+        let light_sampler = scene.light_sampler();
 
-        for light in scene.lights() {
-            match light {
-                Light::Ambient(ambient_light) => {
-                    if let Some(ambient) = brdf.ambient {
-                        if !ambient.is_zero() {
-                            let ambient = [ambient[0] as f64, ambient[1] as f64, ambient[2] as f64];
-                            color += Vec3::from(ambient).component_mul(&ambient_light.l());
-                        }
-                    }
-                }
-                Light::Point(point_light) => {
-                    if let Some(diffuse) = brdf.diffuse {
-                        if !diffuse.is_zero() {
-                            let (light_color, light_pos) = point_light.l();
-                            let mut light_dir = light_pos - intersection.point();
-                            let light_distance = light_dir.norm();
-                            light_dir.normalize_mut();
+        if let Some(ambient) = material.ambient {
+            if !ambient.is_zero() {
+                let ambient_color = light_sampler.sample_ambient_lights(ambient);
+                color += ambient_color;
+            }
+        }
 
-                            let cos = light_dir.dot(&intersection.shading_normal());
-
-                            if cos > 0.0 {
-                                let mut shadow = Ray::new(intersection.point(), light_dir);
-                                shadow.adjust_origin(intersection.geometric_normal());
-                                if scene.visibility(&shadow, light_distance) {
-                                    let diffuse =
-                                        [diffuse[0] as f64, diffuse[1] as f64, diffuse[2] as f64];
-                                    color += Vec3::from(diffuse).component_mul(&light_color) * cos;
-                                }
-                            }
-                        }
-                    }
-                }
+        if let Some(SampleLight {
+            light: light_sampled,
+            power,
+        }) = light_sampler.sample()
+        {
+            match light_sampled {
                 Light::Area(area_light) => {
-                    if let Some(diffuse) = brdf.diffuse {
+                    if let Some(diffuse) = material.diffuse {
                         if !diffuse.is_zero() {
                             let mut rng = rand::thread_rng();
                             let rnd = Vec2::new(rng.gen(), rng.gen());
@@ -97,18 +83,67 @@ impl PathTracerShader {
                                     let diffuse =
                                         [diffuse[0] as f64, diffuse[1] as f64, diffuse[2] as f64];
 
-                                    color += (Vec3::from(diffuse).component_mul(&light_color)
-                                        * cos_l)
-                                        / pdf.unwrap();
+                                    color += ((Vec3::from(diffuse).component_mul(&light_color)
+                                        * cos_l
+                                        / power)
+                                        / pdf.unwrap())
                                 }
                             }
                         }
                     }
                 }
+
+                Light::Point(point_light) => {
+                    if let Some(diffuse) = material.diffuse {
+                        if !diffuse.is_zero() {
+                            let (light_color, light_pos) = point_light.l();
+                            let mut light_dir = light_pos - intersection.point();
+                            let light_distance = light_dir.norm();
+                            light_dir.normalize_mut();
+
+                            let cos = light_dir.dot(&intersection.shading_normal());
+
+                            if cos > 0.0 {
+                                let mut shadow = Ray::new(intersection.point(), light_dir);
+                                shadow.adjust_origin(intersection.geometric_normal());
+                                if scene.visibility(&shadow, light_distance) {
+                                    let diffuse =
+                                        [diffuse[0] as f64, diffuse[1] as f64, diffuse[2] as f64];
+                                    color += (Vec3::from(diffuse).component_mul(&light_color)
+                                        * cos)
+                                        / power;
+                                }
+                            }
+                        }
+                    }
+                }
+                _ => {}
             }
         }
 
         color
+    }
+
+    fn specular_reflection(
+        &self,
+        intersection: &Intersection,
+        material: &Brdf,
+        scene: &Scene,
+        depth: u32,
+    ) -> Color {
+        let gn = intersection.geometric_normal();
+        let wo = intersection.w_outgoing();
+
+        let cos = gn.dot(&wo);
+
+        let r_dir = 2.0 * cos * gn - wo;
+        let specular = Ray::new_with_adjusted_origin(intersection.point(), r_dir, gn);
+
+        let specular_intersection = scene.trace(&specular);
+        let r_color = self.shade(&specular_intersection, scene, Some(depth + 1));
+
+        Vec3::from_column_slice(&[material[0] as f64, material[1] as f64, material[2] as f64])
+            .component_mul(&r_color)
     }
 
     fn diffuse_reflection(
@@ -152,31 +187,9 @@ impl PathTracerShader {
         }
         Color::default()
     }
-
-    fn specular_reflection(
-        &self,
-        intersection: &Intersection,
-        material: &Brdf,
-        scene: &Scene,
-        depth: u32,
-    ) -> Color {
-        let gn = intersection.geometric_normal();
-        let wo = intersection.w_outgoing();
-
-        let cos = gn.dot(&wo);
-
-        let r_dir = 2.0 * cos * gn - wo;
-        let specular = Ray::new_with_adjusted_origin(intersection.point(), r_dir, gn);
-
-        let specular_intersection = scene.trace(&specular);
-        let r_color = self.shade(&specular_intersection, scene, Some(depth + 1));
-
-        Vec3::from_column_slice(&[material[0] as f64, material[1] as f64, material[2] as f64])
-            .component_mul(&r_color)
-    }
 }
 
-impl Shader for PathTracerShader {
+impl Shader for PathTracer {
     fn shade(
         &self,
         intersection: &Option<Intersection>,
@@ -185,24 +198,21 @@ impl Shader for PathTracerShader {
     ) -> Color {
         let mut color = Color::default();
         let Some(intersection) = intersection else {
-            return self.background;
+            return color;
         };
-        let depth = depth.unwrap_or(0);
 
+        let depth = depth.unwrap_or(0);
         if intersection.is_light() {
             return intersection.light_intensity.unwrap();
         }
 
-        let material = intersection
-            .brdf
-            .as_ref()
-            .expect("Expected a material")
-            .material
-            .as_ref()
-            .expect("Expected a material object in info");
+        let Some(material) = intersection.brdf() else {
+            return color;
+        };
 
         let mut rng = rand::thread_rng();
         let rnd_russian = rng.gen::<f64>();
+
         if depth < MAX_DEPTH || rnd_russian < self.continue_p {
             let specular_a = material.specular.unwrap_or([0., 0., 0.]);
             let diffuse_a = material.diffuse.unwrap_or([0., 0., 0.]);

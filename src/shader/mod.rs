@@ -1,6 +1,7 @@
 use crate::{helpers::Color, object::intersection::Intersection, scene::Scene};
 
 pub mod ambient_shader;
+pub mod better_path_tracer_shader;
 pub mod distributed_shader;
 pub mod path_tracer_shader;
 pub mod whitted_shader;

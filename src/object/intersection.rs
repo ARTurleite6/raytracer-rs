@@ -42,6 +42,11 @@ impl Intersection {
         }
     }
 
+    pub fn brdf(&self) -> Option<&Material> {
+        let info = self.brdf.as_ref()?;
+        info.material.as_ref()
+    }
+
     pub fn is_light(&self) -> bool {
         self.light_intensity.is_some()
     }

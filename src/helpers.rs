@@ -1,4 +1,5 @@
 use nalgebra::Matrix3;
+use tobj::Material;
 
 pub type Vec3 = nalgebra::Vector3<f64>;
 pub type Vec2 = nalgebra::Vector2<f64>;
@@ -39,6 +40,16 @@ impl CoordinateSystemProvider for Vec3 {
         let v3 = self.cross(&v2);
         (v2, v3)
     }
+}
+
+pub fn has_component<F, Component>(material: &Material, component_getter: F) -> bool
+where
+    Component: Zeroable,
+    F: FnOnce(&Material) -> Option<Component>,
+{
+    let component = component_getter(material);
+
+    component.is_some_and(|value| !value.is_zero())
 }
 
 pub trait Zeroable {

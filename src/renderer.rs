@@ -1,4 +1,4 @@
-use std::sync::{Mutex};
+use std::sync::Mutex;
 
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use nalgebra::Vector2;
@@ -9,7 +9,7 @@ use crate::{
     helpers::{Color, Vec3},
     image::Image,
     scene::Scene,
-    shader::{path_tracer_shader::PathTracerShader, Shader},
+    shader::{better_path_tracer_shader::PathTracer, path_tracer_shader::PathTracerShader, Shader},
 };
 
 #[derive(Debug)]
@@ -46,14 +46,17 @@ impl Renderer {
         (0..height).into_par_iter().for_each(|y| {
             (0..width).into_par_iter().for_each(|x| {
                 samples_pb.reset();
-                let color = (0..self.samples_per_pixel).into_par_iter().fold(Color::default, |a, _| {
-                    let mut rng = rand::thread_rng();
-                    let jitter = Vector2::new(rng.gen::<f64>(), rng.gen::<f64>());
-                    let intersection = self.scene.cast_ray(x, y, jitter);
-                    let color = shader.shade(&intersection, &self.scene, None);
-                    samples_pb.inc(1);
-                    a + color
-                }).reduce(Color::default, |a, b| a + b);
+                let color = (0..self.samples_per_pixel)
+                    .into_par_iter()
+                    .fold(Color::default, |a, _| {
+                        let mut rng = rand::thread_rng();
+                        let jitter = Vector2::new(rng.gen::<f64>(), rng.gen::<f64>());
+                        let intersection = self.scene.cast_ray(x, y, jitter);
+                        let color = shader.shade(&intersection, &self.scene, None);
+                        samples_pb.inc(1);
+                        a + color
+                    })
+                    .reduce(Color::default, |a, b| a + b);
                 image
                     .lock()
                     .unwrap()

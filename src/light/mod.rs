@@ -1,5 +1,7 @@
 pub mod ambient_light;
 pub mod area_light;
+pub mod light_sample_context;
+pub mod light_sampler;
 pub mod point_light;
 
 use serde::Deserialize;
@@ -24,11 +26,20 @@ pub enum LightArgs {
     Area(AreaLightArgs),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Light {
     Ambient(AmbientLight),
     Point(PointLight),
     Area(AreaLight),
+}
+
+impl Light {
+    pub fn is_ambient_light(&self) -> bool {
+        match self {
+            Self::Ambient(_) => true,
+            _ => false,
+        }
+    }
 }
 
 impl From<LightArgs> for Light {
