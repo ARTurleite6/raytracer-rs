@@ -9,6 +9,10 @@ pub struct PointLight {
 }
 
 impl PointLight {
+    pub fn distance(&self, point: &Vec3) -> f64 {
+        (self.pos - point).norm()
+    }
+
     pub fn l(&self) -> (Color, Vec3) {
         (self.color, self.pos)
     }

@@ -6,8 +6,8 @@ use tobj::Material;
 use crate::{
     helpers::{Color, CoordinateSystemProvider, Rotateable, Vec2, Vec3, Zeroable},
     light::{
-        light_sampler::{LightSampler, SampleLight},
-        Light, SampleLightResult,
+        light_sample_context::LightSampleContext, light_sampler::SampleLight, Light,
+        SampleLightResult,
     },
     object::{intersection::Intersection, ray::Ray},
     scene::Scene,
@@ -51,7 +51,7 @@ impl PathTracer {
         if let Some(SampleLight {
             light: light_sampled,
             power,
-        }) = light_sampler.sample()
+        }) = light_sampler.sample(LightSampleContext::new(intersection))
         {
             match light_sampled {
                 Light::Area(area_light) => {
@@ -198,7 +198,7 @@ impl Shader for PathTracer {
     ) -> Color {
         let mut color = Color::default();
         let Some(intersection) = intersection else {
-            return color;
+            return self.background_color;
         };
 
         let depth = depth.unwrap_or(0);

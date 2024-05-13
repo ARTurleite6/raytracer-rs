@@ -40,6 +40,14 @@ impl Light {
             _ => false,
         }
     }
+
+    pub fn intensity(&self) -> Color {
+        match self {
+            Self::Ambient(light) => light.l(),
+            Self::Point(light) => light.l().0,
+            Self::Area(light) => *light.intensity(),
+        }
+    }
 }
 
 impl From<LightArgs> for Light {

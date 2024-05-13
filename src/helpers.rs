@@ -62,6 +62,10 @@ impl Zeroable for [f32; 3] {
     }
 }
 
+pub fn gray_scale(color: &Color) -> f64 {
+    0.299 * color.x + 0.587 * color.y + 0.114 * color.z
+}
+
 pub fn mul_vec3_with_rgb(v: Vec3, c: Vec3) -> Vec3 {
     Vec3::new(v.x * c.x, v.y * c.y, v.z * c.z)
 }

@@ -1,67 +1,32 @@
-use rand::seq::IteratorRandom;
+use crate::helpers::Color;
 
-use crate::helpers::{Color, Vec3};
+use self::base_sampler::BaseSampler;
 
-use super::{ambient_light::AmbientLight, light_sample_context::LightSampleContext, Light};
+use super::{area_light::AreaLight, light_sample_context::LightSampleContext, Light};
+
+mod base_sampler;
+pub mod power_sampler;
+pub mod uniform_sampler;
 
 pub struct SampleLight {
     pub light: Light,
     pub power: f64,
 }
 
-pub trait LightSampler {
-    fn sample_ambient_lights(&self, ambient_component: [f32; 3]) -> Color;
-
-    fn sample(&self) -> Option<SampleLight>;
-}
-
-#[derive(Debug, Default)]
-pub struct UniformLightSampler {
-    ambient_lights: Vec<AmbientLight>,
-    positional_lights: Vec<Light>,
-}
-
-impl UniformLightSampler {
-    pub fn new(lights: Vec<Light>) -> Self {
-        let (ambient_lights, positional_lights): (Vec<Light>, Vec<Light>) =
-            lights.into_iter().partition(Light::is_ambient_light);
-
-        let ambient_lights = ambient_lights
-            .into_iter()
-            .map(|light| {
-                let Light::Ambient(light) = light else {
-                    unreachable!("this has to be a ambient light as checked above");
-                };
-                light
-            })
-            .collect();
-
-        Self {
-            ambient_lights,
-            positional_lights,
-        }
-    }
-}
-
-impl LightSampler for UniformLightSampler {
-    fn sample(&self) -> Option<SampleLight> {
-        let mut rng = rand::thread_rng();
-        Some(SampleLight {
-            light: self.positional_lights.iter().choose(&mut rng)?.clone(),
-            power: 1. / self.positional_lights.len() as f64,
-        })
-    }
-
+pub trait LightSampler: HasBaseSampler {
     fn sample_ambient_lights(&self, ambient_component: [f32; 3]) -> Color {
-        let ambient = [
-            ambient_component[0] as f64,
-            ambient_component[1] as f64,
-            ambient_component[2] as f64,
-        ];
-
-        self.ambient_lights
-            .iter()
-            .map(|light| Vec3::from(ambient).component_mul(&light.l()))
-            .sum()
+        self.base_sampler().sample_ambient_lights(ambient_component)
     }
+
+    fn geometric_lights(&self) -> Vec<AreaLight> {
+        self.base_sampler().geometric_lights()
+    }
+
+    fn sample(&self, context: LightSampleContext) -> Option<SampleLight> {
+        self.base_sampler().sample(context)
+    }
+}
+
+pub trait HasBaseSampler {
+    fn base_sampler(&self) -> &BaseSampler;
 }

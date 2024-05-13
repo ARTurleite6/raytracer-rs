@@ -5,7 +5,11 @@ use tobj::{Material, GPU_LOAD_OPTIONS};
 
 use crate::{
     camera::{Camera, CameraArgs},
-    light::{area_light::AreaLight, light_sampler::UniformLightSampler, Light},
+    light::{
+        area_light::AreaLight,
+        light_sampler::{power_sampler::PowerLightSampler, LightSampler},
+        Light,
+    },
     object::{
         intersection::{get_min_intersection, Intersectable, Intersection, MaterialInformation},
         mesh::Mesh,
@@ -13,12 +17,12 @@ use crate::{
     },
 };
 
-#[derive(Debug, Default)]
 pub struct Scene {
     materials: Vec<Material>,
     objects: Vec<Mesh>,
     lights: Vec<Light>,
-    light_sampler: UniformLightSampler,
+    light_sampler: Box<dyn LightSampler + Send + Sync>,
+    geometric_lights: Vec<AreaLight>,
     camera: Camera,
 }
 
@@ -41,8 +45,8 @@ impl Scene {
         self.camera.height()
     }
 
-    pub fn light_sampler(&self) -> &UniformLightSampler {
-        &self.light_sampler
+    pub fn light_sampler(&self) -> &dyn LightSampler {
+        self.light_sampler.as_ref()
     }
 
     pub fn lights(&self) -> &[Light] {
@@ -62,35 +66,25 @@ impl Scene {
         camera: Camera,
         lights: Vec<Light>,
     ) -> Result<Self, Box<dyn Error>> {
-        let mut scene = Scene::default();
         let (models, materials) = tobj::load_obj(obj_path, &GPU_LOAD_OPTIONS)?;
 
-        scene.camera = camera;
-        scene.materials = materials?;
+        let objects = models.into_iter().map(Mesh::from).collect();
 
-        println!("# of models: {}", models.len());
-        println!("# of materials: {}", scene.materials.len());
+        let light_sampler = Box::new(PowerLightSampler::new(lights.clone()));
+        let geometric_lights = light_sampler.geometric_lights();
 
-        scene.objects = models.into_iter().map(Mesh::from).collect();
-
-        scene.lights = lights.clone();
-        scene.light_sampler = UniformLightSampler::new(lights);
-
-        Ok(scene)
+        Ok(Self {
+            lights,
+            objects,
+            camera,
+            materials: materials?,
+            geometric_lights,
+            light_sampler,
+        })
     }
 
     pub fn trace(&self, ray: &Ray) -> Option<Intersection> {
-        let geometric_lights: Vec<AreaLight> = self
-            .lights
-            .iter()
-            .filter_map(|light| {
-                if let Light::Area(light) = light {
-                    Some(light.clone())
-                } else {
-                    None
-                }
-            })
-            .collect();
+        let geometric_lights = &self.geometric_lights;
 
         let intersection = get_min_intersection(ray, &self.objects);
 

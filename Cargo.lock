@@ -253,6 +253,7 @@ dependencies = [
  "instant",
  "number_prefix",
  "portable-atomic",
+ "rayon",
  "unicode-width",
 ]
 

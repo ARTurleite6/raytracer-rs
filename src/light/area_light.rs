@@ -43,6 +43,30 @@ impl AreaLight {
         }
     }
 
+    pub fn intensity(&self) -> &Color {
+        &self.intensity
+    }
+
+    pub fn distance(&self, point: &Vec3) -> f64 {
+        let vertices = self.gem.vertices();
+        let normal = self.gem.normal();
+        let d = -vertices[0].dot(&normal);
+        (normal.dot(&point) + d).abs()
+    }
+
+    // TODO: Implement the cos of the angle
+    //pub fn angle_cos(&self, normal: &Vec3) -> f64 {
+    //    let vector_to_point = point - self.gem.vertices()[0];
+
+    //    // Calculate the normal vector of the triangle
+    //    let triangle_normal = self.normal();
+
+    //    // Calculate the angle between the vector to the point and the triangle normal
+    //    let angle = vector_to_point.dot(&triangle_normal)
+    //        / (vector_to_point.norm() * triangle_normal.norm());
+    //    angle
+    //}
+
     pub fn normal(&self) -> Vec3 {
         self.gem.normal()
     }
