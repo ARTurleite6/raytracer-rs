@@ -110,7 +110,7 @@ impl Scene {
         Some(min_intersection)
     }
 
-    pub fn cast_ray(&self, x: usize, y: usize, jitter: Vector2<f64>) -> Option<Intersection> {
+    pub fn cast_ray(&self, x: usize, y: usize, jitter: &Vector2<f64>) -> Option<Intersection> {
         let ray = self.camera.get_ray(x, y, jitter);
         self.trace(&ray)
     }

@@ -27,7 +27,7 @@ impl DistributedShader {
         let cos = gn.dot(&wo);
 
         let rdir = (2.0 * cos * gn) - wo;
-        let mut specular = Ray::new(intersection.point(), rdir);
+        let mut specular = Ray::new(&intersection.point(), &rdir);
         specular.adjust_origin(gn);
 
         let intersection = scene.trace(&specular);
@@ -49,7 +49,7 @@ impl DistributedShader {
                     if let Some(ambient) = brdf.ambient {
                         if !ambient.is_zero() {
                             let ambient = [ambient[0] as f64, ambient[1] as f64, ambient[2] as f64];
-                            color += mul_vec3_with_rgb(Vec3::from(ambient), ambient_light.l());
+                            color += mul_vec3_with_rgb(&Vec3::from(ambient), &ambient_light.l());
                         }
                     }
                 }
@@ -64,13 +64,13 @@ impl DistributedShader {
                             let cos = light_dir.dot(&intersection.shading_normal());
 
                             if cos > 0.0 {
-                                let mut shadow = Ray::new(intersection.point(), light_dir);
+                                let mut shadow = Ray::new(&intersection.point(), &light_dir);
                                 shadow.adjust_origin(intersection.geometric_normal());
                                 if scene.visibility(&shadow, light_distance) {
                                     let diffuse =
                                         [diffuse[0] as f64, diffuse[1] as f64, diffuse[2] as f64];
                                     color +=
-                                        mul_vec3_with_rgb(Vec3::from(diffuse), light_color) * cos;
+                                        mul_vec3_with_rgb(&Vec3::from(diffuse), &light_color) * cos;
                                 }
                             }
                         }
@@ -86,7 +86,7 @@ impl DistributedShader {
                                 color: light_color,
                                 point,
                                 pdf,
-                            } = area_light.l(rnd);
+                            } = area_light.l(&rnd);
                             let point = point.unwrap();
 
                             let mut light_dir = point - intersection.point();
@@ -97,16 +97,17 @@ impl DistributedShader {
                             let cos_l_la = light_dir.dot(&area_light.normal());
 
                             if cos_l > 0.0 && cos_l_la <= 0.0 {
-                                let mut shadow = Ray::new(intersection.point(), light_dir);
+                                let mut shadow = Ray::new(&intersection.point(), &light_dir);
                                 shadow.adjust_origin(intersection.geometric_normal());
 
                                 if scene.visibility(&shadow, light_distance - 0.0001) {
                                     let diffuse =
                                         [diffuse[0] as f64, diffuse[1] as f64, diffuse[2] as f64];
 
-                                    color += (mul_vec3_with_rgb(Vec3::from(diffuse), light_color)
-                                        * cos_l)
-                                        / pdf.unwrap();
+                                    color +=
+                                        (mul_vec3_with_rgb(&Vec3::from(diffuse), &light_color)
+                                            * cos_l)
+                                            / pdf.unwrap();
                                 }
                             }
                         }

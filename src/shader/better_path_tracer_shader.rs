@@ -51,7 +51,7 @@ impl PathTracer {
         if let Some(SampleLight {
             light: light_sampled,
             power,
-        }) = light_sampler.sample(LightSampleContext::new(intersection))
+        }) = light_sampler.sample(LightSampleContext::new(intersection, &scene))
         {
             match light_sampled {
                 Light::Area(area_light) => {
@@ -64,11 +64,11 @@ impl PathTracer {
                                 color: light_color,
                                 point,
                                 pdf,
-                            } = area_light.l(rnd);
+                            } = area_light.l(&rnd);
                             let point = point.unwrap();
-                            let _i_point = intersection.point();
+                            let i_point = intersection.point();
 
-                            let mut light_dir = point - intersection.point();
+                            let mut light_dir = point - i_point;
                             let light_distance = light_dir.norm();
                             light_dir.normalize_mut();
 
@@ -76,17 +76,17 @@ impl PathTracer {
                             let cos_l_la = light_dir.dot(&area_light.normal());
 
                             if cos_l > 0.0 && cos_l_la <= 0.0 {
-                                let mut shadow = Ray::new(intersection.point(), light_dir);
+                                let mut shadow = Ray::new(&i_point, &light_dir);
                                 shadow.adjust_origin(intersection.geometric_normal());
 
                                 if scene.visibility(&shadow, light_distance - 0.0001) {
                                     let diffuse =
                                         [diffuse[0] as f64, diffuse[1] as f64, diffuse[2] as f64];
 
-                                    color += ((Vec3::from(diffuse).component_mul(&light_color)
+                                    color += (Vec3::from(diffuse).component_mul(&light_color)
                                         * cos_l
                                         / power)
-                                        / pdf.unwrap())
+                                        / pdf.unwrap()
                                 }
                             }
                         }
@@ -104,7 +104,7 @@ impl PathTracer {
                             let cos = light_dir.dot(&intersection.shading_normal());
 
                             if cos > 0.0 {
-                                let mut shadow = Ray::new(intersection.point(), light_dir);
+                                let mut shadow = Ray::new(&intersection.point(), &light_dir);
                                 shadow.adjust_origin(intersection.geometric_normal());
                                 if scene.visibility(&shadow, light_distance) {
                                     let diffuse =
@@ -137,7 +137,7 @@ impl PathTracer {
         let cos = gn.dot(&wo);
 
         let r_dir = 2.0 * cos * gn - wo;
-        let specular = Ray::new_with_adjusted_origin(intersection.point(), r_dir, gn);
+        let specular = Ray::new_with_adjusted_origin(&intersection.point(), &r_dir, &gn);
 
         let specular_intersection = scene.trace(&specular);
         let r_color = self.shade(&specular_intersection, scene, Some(depth + 1));
@@ -169,8 +169,11 @@ impl PathTracer {
         let gn = intersection.geometric_normal();
         let (rx, ry) = gn.coordinate_system();
 
-        let diffuse =
-            Ray::new_with_adjusted_origin(intersection.point(), d_around.rotate(rx, ry, gn), gn);
+        let diffuse = Ray::new_with_adjusted_origin(
+            intersection.point(),
+            &d_around.rotate(&rx, &ry, &gn),
+            gn,
+        );
         let d_intersection = scene.trace(&diffuse);
         if let Some(d_intersection) = d_intersection {
             if !d_intersection.is_light() {

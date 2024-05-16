@@ -55,20 +55,20 @@ impl Intersection {
         self.depth
     }
 
-    pub fn point(&self) -> Vec3 {
-        self.point
+    pub fn point(&self) -> &Vec3 {
+        &self.point
     }
 
-    pub fn w_outgoing(&self) -> Vec3 {
-        self.w_outgoing
+    pub fn w_outgoing(&self) -> &Vec3 {
+        &self.w_outgoing
     }
 
-    pub fn shading_normal(&self) -> Vec3 {
-        self.shading_normal
+    pub fn shading_normal(&self) -> &Vec3 {
+        &self.shading_normal
     }
 
-    pub fn geometric_normal(&self) -> Vec3 {
-        self.geometry_normal
+    pub fn geometric_normal(&self) -> &Vec3 {
+        &self.geometry_normal
     }
 }
 

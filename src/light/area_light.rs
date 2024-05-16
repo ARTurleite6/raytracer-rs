@@ -1,7 +1,7 @@
 use serde::Deserialize;
 
 use crate::{
-    helpers::{Color, Vec2, Vec3},
+    helpers::{Color, Rotateable, Vec2, Vec3},
     object::{
         face::{Face, FaceBuilder},
         intersection::Intersectable,
@@ -14,11 +14,12 @@ use super::SampleLightResult;
 pub struct AreaLightArgs {
     vertex: [Vec3; 3],
     power: Color,
+    normal: Vec3,
 }
 
 impl From<AreaLightArgs> for AreaLight {
     fn from(value: AreaLightArgs) -> Self {
-        Self::new(value.vertex, value.power)
+        Self::new(value.vertex, &value.power, &value.normal)
     }
 }
 
@@ -31,15 +32,15 @@ pub struct AreaLight {
 }
 
 impl AreaLight {
-    pub fn new(vertex: [Vec3; 3], power: Vec3) -> Self {
-        let gem = FaceBuilder::new(vertex).build();
+    pub fn new(vertex: [Vec3; 3], power: &Vec3, normal: &Vec3) -> Self {
+        let gem = FaceBuilder::new(vertex).normal(normal).build();
         let pdf = 1.0 / gem.area();
         let intensity = power * pdf;
         Self {
             gem,
             pdf,
             intensity,
-            power,
+            power: *power,
         }
     }
 
@@ -54,24 +55,24 @@ impl AreaLight {
         (normal.dot(&point) + d).abs()
     }
 
-    // TODO: Implement the cos of the angle
-    //pub fn angle_cos(&self, normal: &Vec3) -> f64 {
-    //    let vector_to_point = point - self.gem.vertices()[0];
+    pub fn angle_cos(&self, normal: &Vec3) -> f64 {
+        let triangle_normal = self.gem.normal().face_forward(normal);
 
-    //    // Calculate the normal vector of the triangle
-    //    let triangle_normal = self.normal();
+        // Calculate the angle between the vector to the point and the triangle normal
+        let cos = normal.dot(&triangle_normal) / (normal.norm() * normal.norm());
 
-    //    // Calculate the angle between the vector to the point and the triangle normal
-    //    let angle = vector_to_point.dot(&triangle_normal)
-    //        / (vector_to_point.norm() * triangle_normal.norm());
-    //    angle
-    //}
+        if cos < 0. {
+            0.0
+        } else {
+            cos
+        }
+    }
 
-    pub fn normal(&self) -> Vec3 {
+    pub fn normal(&self) -> &Vec3 {
         self.gem.normal()
     }
 
-    pub fn l(&self, randoms: Vec2) -> SampleLightResult {
+    pub fn l(&self, randoms: &Vec2) -> SampleLightResult {
         let sqrt_r0 = randoms.x.sqrt();
         let alpha = 1.0 - sqrt_r0;
         let beta = (1.0 - randoms.y) * sqrt_r0;

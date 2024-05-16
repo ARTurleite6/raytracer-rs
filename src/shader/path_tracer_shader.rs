@@ -57,7 +57,7 @@ impl PathTracerShader {
                             let cos = light_dir.dot(&intersection.shading_normal());
 
                             if cos > 0.0 {
-                                let mut shadow = Ray::new(intersection.point(), light_dir);
+                                let mut shadow = Ray::new(&intersection.point(), &light_dir);
                                 shadow.adjust_origin(intersection.geometric_normal());
                                 if scene.visibility(&shadow, light_distance) {
                                     let diffuse =
@@ -78,7 +78,7 @@ impl PathTracerShader {
                                 color: light_color,
                                 point,
                                 pdf,
-                            } = area_light.l(rnd);
+                            } = area_light.l(&rnd);
                             let point = point.unwrap();
                             let _i_point = intersection.point();
 
@@ -90,7 +90,7 @@ impl PathTracerShader {
                             let cos_l_la = light_dir.dot(&area_light.normal());
 
                             if cos_l > 0.0 && cos_l_la <= 0.0 {
-                                let mut shadow = Ray::new(intersection.point(), light_dir);
+                                let mut shadow = Ray::new(&intersection.point(), &light_dir);
                                 shadow.adjust_origin(intersection.geometric_normal());
 
                                 if scene.visibility(&shadow, light_distance - 0.0001) {
@@ -134,8 +134,11 @@ impl PathTracerShader {
         let gn = intersection.geometric_normal();
         let (rx, ry) = gn.coordinate_system();
 
-        let diffuse =
-            Ray::new_with_adjusted_origin(intersection.point(), d_around.rotate(rx, ry, gn), gn);
+        let diffuse = Ray::new_with_adjusted_origin(
+            intersection.point(),
+            &d_around.rotate(&rx, &ry, &gn),
+            gn,
+        );
         let d_intersection = scene.trace(&diffuse);
         if let Some(d_intersection) = d_intersection {
             if !d_intersection.is_light() {
@@ -166,7 +169,7 @@ impl PathTracerShader {
         let cos = gn.dot(&wo);
 
         let r_dir = 2.0 * cos * gn - wo;
-        let specular = Ray::new_with_adjusted_origin(intersection.point(), r_dir, gn);
+        let specular = Ray::new_with_adjusted_origin(intersection.point(), &r_dir, gn);
 
         let specular_intersection = scene.trace(&specular);
         let r_color = self.shade(&specular_intersection, scene, Some(depth + 1));

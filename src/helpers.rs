@@ -11,17 +11,17 @@ pub trait CoordinateSystemProvider {
 }
 
 pub trait Rotateable {
-    fn rotate(&self, rx: Vec3, ry: Vec3, rz: Vec3) -> Self;
-    fn face_forward(&self, wo: Vec3) -> Self;
+    fn rotate(&self, rx: &Vec3, ry: &Vec3, rz: &Vec3) -> Self;
+    fn face_forward(&self, wo: &Vec3) -> Self;
 }
 
 impl Rotateable for Vec3 {
-    fn rotate(&self, rx: Vec3, ry: Vec3, rz: Vec3) -> Self {
+    fn rotate(&self, rx: &Vec3, ry: &Vec3, rz: &Vec3) -> Self {
         let rotation_matrix = Matrix3::new(rx.x, ry.x, rz.x, rx.y, ry.y, rz.y, rx.z, ry.z, rz.z);
         rotation_matrix * self
     }
 
-    fn face_forward(&self, wo: Vec3) -> Self {
+    fn face_forward(&self, wo: &Vec3) -> Self {
         if self.dot(&wo) < 0.0 {
             -1. * self
         } else {
@@ -66,7 +66,7 @@ pub fn gray_scale(color: &Color) -> f64 {
     0.299 * color.x + 0.587 * color.y + 0.114 * color.z
 }
 
-pub fn mul_vec3_with_rgb(v: Vec3, c: Vec3) -> Vec3 {
+pub fn mul_vec3_with_rgb(v: &Vec3, c: &Vec3) -> Vec3 {
     Vec3::new(v.x * c.x, v.y * c.y, v.z * c.z)
 }
 

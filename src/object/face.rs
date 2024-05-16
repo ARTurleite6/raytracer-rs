@@ -26,6 +26,11 @@ impl FaceBuilder {
         }
     }
 
+    pub fn normal(mut self, normal: &Vec3) -> Self {
+        self.normal = Some(*normal);
+        self
+    }
+
     pub fn face_id(mut self, face_id: usize) -> Self {
         self.face_id = Some(face_id);
         self
@@ -53,14 +58,14 @@ pub struct Face {
 impl Face {
     pub fn new(vertex: [Vec3; 3], normal: Option<Vec3>) -> Self {
         let bounding_box = BoundingBox::new(
-            vertex.iter().fold(vertex[0], |acc, new_vertex| {
+            &vertex.iter().fold(vertex[0], |acc, new_vertex| {
                 Vector3::new(
                     acc.x.min(new_vertex.x),
                     acc.y.min(new_vertex.y),
                     acc.z.min(new_vertex.z),
                 )
             }),
-            vertex.iter().fold(vertex[0], |acc, new_vertex| {
+            &vertex.iter().fold(vertex[0], |acc, new_vertex| {
                 Vector3::new(
                     acc.x.max(new_vertex.x),
                     acc.y.max(new_vertex.y),
@@ -91,12 +96,12 @@ impl Face {
         }
     }
 
-    pub fn normal(&self) -> Vec3 {
-        self.normal
+    pub fn normal(&self) -> &Vec3 {
+        &self.normal
     }
 
-    pub fn vertices(&self) -> [Vec3; 3] {
-        self.vertex
+    pub fn vertices(&self) -> &[Vec3; 3] {
+        &self.vertex
     }
 
     pub fn get_bounding_box(&self) -> &BoundingBox {
@@ -142,7 +147,7 @@ impl Intersectable for Face {
             let intersection_point = ray.origin() + ray.direction() * t;
             let wo = -1.0 * ray.direction();
 
-            let normal = self.normal.face_forward(wo);
+            let normal = self.normal.face_forward(&wo);
             Some(Intersection::new(
                 intersection_point,
                 normal,

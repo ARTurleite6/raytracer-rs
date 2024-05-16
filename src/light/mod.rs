@@ -4,14 +4,16 @@ pub mod light_sample_context;
 pub mod light_sampler;
 pub mod point_light;
 
+use rand::Rng;
 use serde::Deserialize;
 
-use crate::helpers::{Color, Vec3};
+use crate::helpers::{Color, Vec2, Vec3};
 
 use self::ambient_light::AmbientLight;
 use self::area_light::{AreaLight, AreaLightArgs};
 use self::point_light::PointLight;
 
+#[derive(Default)]
 pub struct SampleLightResult {
     pub color: Color,
     pub point: Option<Vec3>,
@@ -38,6 +40,31 @@ impl Light {
         match self {
             Self::Ambient(_) => true,
             _ => false,
+        }
+    }
+
+    pub fn l(&self) -> SampleLightResult {
+        match self {
+            Self::Area(area_light) => {
+                let mut rng = rand::thread_rng();
+                let randoms = Vec2::new(rng.gen(), rng.gen());
+                area_light.l(&randoms)
+            }
+            Self::Point(point_light) => {
+                let (color, point) = point_light.l();
+                SampleLightResult {
+                    color,
+                    point: point.into(),
+                    ..Default::default()
+                }
+            }
+            Self::Ambient(ambient_light) => {
+                let color = ambient_light.l();
+                SampleLightResult {
+                    color,
+                    ..Default::default()
+                }
+            }
         }
     }
 

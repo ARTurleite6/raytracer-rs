@@ -37,15 +37,15 @@ impl Intersectable for Mesh {
 
 impl Mesh {
     fn update_bounding_box(&mut self) {
-        let (mut min_vert, mut max_vert) = self.faces[0].get_bounding_box().get_min_max();
+        let (&(mut min_vert), &(mut max_vert)) = self.faces[0].get_bounding_box().get_min_max();
 
         for face in self.faces.iter().skip(1) {
             let (face_min_vert, face_max_vert) = face.get_bounding_box().get_min_max();
-            min_vert = min_vert.min_between(&face_min_vert);
-            max_vert = max_vert.max_between(&face_max_vert);
+            min_vert = min_vert.min_between(face_min_vert);
+            max_vert = max_vert.max_between(face_max_vert);
         }
 
-        self.bounding_box = BoundingBox::new(min_vert, max_vert);
+        self.bounding_box = BoundingBox::new(&min_vert, &max_vert);
     }
 }
 

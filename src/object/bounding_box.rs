@@ -11,12 +11,15 @@ pub struct BoundingBox {
 }
 
 impl BoundingBox {
-    pub fn new(min: Vec3, max: Vec3) -> Self {
-        Self { min, max }
+    pub fn new(min: &Vec3, max: &Vec3) -> Self {
+        Self {
+            min: min.clone(),
+            max: max.clone(),
+        }
     }
 
-    pub fn get_min_max(&self) -> (Vec3, Vec3) {
-        (self.min, self.max)
+    pub fn get_min_max(&self) -> (&Vec3, &Vec3) {
+        (&self.min, &self.max)
     }
 
     pub fn intersect(&self, ray: &Ray) -> bool {
