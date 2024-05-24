@@ -1,8 +1,9 @@
 use std::error::Error;
 
+use anyhow::anyhow;
 use serde::Deserialize;
 
-use crate::{camera::CameraArgs, light::LightArgs, renderer::Renderer, scene::Scene};
+use crate::{camera::CameraArgs, image::Image, light::LightArgs, renderer::Renderer, scene::Scene};
 
 #[derive(Debug, Deserialize)]
 pub struct Configuration {
@@ -23,18 +24,22 @@ pub struct RayTracer {
 }
 
 impl RayTracer {
-    pub fn with_configuration(configuration: Configuration) -> Self {
+    pub fn with_configuration(configuration: Configuration) -> anyhow::Result<Self> {
+        if !Image::valid_format(&configuration.output_file) {
+            return Err(anyhow!("invalid extension of output file"));
+        }
+
         let lights = configuration
             .lights
             .into_iter()
             .map(|light| light.into())
             .collect();
-        RayTracer {
+        Ok(RayTracer {
             renderer: Renderer::new(
                 Scene::with_camera_args(&configuration.model_file, configuration.camera, lights),
                 configuration.samples_per_pixel,
             ),
-        }
+        })
     }
 
     pub fn new(
