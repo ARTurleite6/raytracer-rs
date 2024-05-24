@@ -1,6 +1,6 @@
 use crate::{
     helpers::{mul_vec3_with_rgb, Vec3, Zeroable},
-    light::Light,
+    light::{light_sampler::LightSampler, Light},
     object::intersection::Intersection,
     scene::Scene,
 };
@@ -19,11 +19,12 @@ impl AmbientShader {
 }
 
 impl Shader for AmbientShader {
-    fn shade(
+    fn shade<L: LightSampler>(
         &self,
         intersection: &Option<Intersection>,
         scene: &Scene,
         _depth: Option<u32>,
+        _light_sampler: &L,
     ) -> Color {
         let mut color = Vec3::new(0.0, 0.0, 0.0);
 

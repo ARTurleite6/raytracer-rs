@@ -76,10 +76,13 @@ pub trait Intersectable {
     fn intersect(&self, ray: &Ray) -> Option<Intersection>;
 }
 
-pub fn get_min_intersection<T: Intersectable>(ray: &Ray, objects: &[T]) -> Option<Intersection> {
+pub fn get_min_intersection<'a, T: Intersectable + 'a>(
+    ray: &Ray,
+    objects: impl Iterator<Item = &'a T>,
+) -> Option<Intersection> {
     let mut min_intersection: Option<Intersection> = None;
 
-    for object in objects.iter() {
+    for object in objects {
         if let Some(intersection) = object.intersect(ray) {
             if let Some(curr_intersection) = &min_intersection {
                 if intersection.depth() < curr_intersection.depth() {

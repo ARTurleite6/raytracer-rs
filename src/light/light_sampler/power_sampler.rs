@@ -8,20 +8,20 @@ use super::{
 };
 
 #[derive(Debug)]
-pub struct PowerLightSampler {
-    base_sampler: BaseSampler,
+pub struct PowerLightSampler<'lights> {
+    base_sampler: BaseSampler<'lights>,
 }
 
-impl PowerLightSampler {
+impl<'a> PowerLightSampler<'a> {
     #[allow(dead_code)]
-    pub fn new(lights: Vec<Light>) -> Self {
+    pub fn new(lights: impl Iterator<Item = &'a Light>) -> Self {
         Self {
             base_sampler: BaseSampler::new(lights),
         }
     }
 }
 
-impl LightSampler for PowerLightSampler {
+impl LightSampler for PowerLightSampler<'_> {
     fn sample(&self, context: LightSampleContext, rng: &mut Rng) -> Option<SampleLight> {
         let mut weights: Vec<_> = self
             .base_sampler
@@ -58,7 +58,7 @@ impl LightSampler for PowerLightSampler {
     }
 }
 
-impl HasBaseSampler for PowerLightSampler {
+impl HasBaseSampler for PowerLightSampler<'_> {
     fn base_sampler(&self) -> &BaseSampler {
         &self.base_sampler
     }

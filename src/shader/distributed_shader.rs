@@ -3,7 +3,7 @@ use tobj::Material;
 
 use crate::{
     helpers::{mul_vec3_with_rgb, Color, Vec2, Vec3, Zeroable},
-    light::{Light, SampleLightResult},
+    light::{light_sampler::LightSampler, Light, SampleLightResult},
     object::{intersection::Intersection, ray::Ray},
     scene::Scene,
 };
@@ -20,7 +20,13 @@ impl DistributedShader {
         Self { background }
     }
 
-    fn specular_reflection(&self, intersection: &Intersection, scene: &Scene, depth: u32) -> Color {
+    fn specular_reflection<L: LightSampler>(
+        &self,
+        intersection: &Intersection,
+        scene: &Scene,
+        depth: u32,
+        light_sampler: &L,
+    ) -> Color {
         let wo = intersection.w_outgoing();
         let gn = intersection.geometric_normal();
 
@@ -30,9 +36,9 @@ impl DistributedShader {
         let mut specular = Ray::new(&intersection.point(), &rdir);
         specular.adjust_origin(gn);
 
-        let intersection = scene.trace(&specular);
+        let intersection = scene.trace(&specular, light_sampler);
 
-        self.shade(&intersection, scene, Some(depth + 1))
+        self.shade(&intersection, scene, Some(depth + 1), light_sampler)
     }
 
     fn direct_lighting(
@@ -128,11 +134,12 @@ impl DistributedShader {
 }
 
 impl Shader for DistributedShader {
-    fn shade(
+    fn shade<L: LightSampler>(
         &self,
         intersection: &Option<Intersection>,
         scene: &Scene,
         depth: Option<u32>,
+        light_sampler: &L,
     ) -> Color {
         let mut color = Color::new(0.0, 0.0, 0.0);
 
@@ -155,7 +162,7 @@ impl Shader for DistributedShader {
         let depth = depth.unwrap_or(0);
         if let Some(specular) = material.specular {
             if !specular.is_zero() && depth < 4 {
-                color += self.specular_reflection(intersection, scene, depth + 1);
+                color += self.specular_reflection(intersection, scene, depth + 1, light_sampler);
             }
         }
 

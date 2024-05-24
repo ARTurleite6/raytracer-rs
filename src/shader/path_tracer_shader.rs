@@ -3,7 +3,7 @@ use tobj::Material;
 
 use crate::{
     helpers::{Color, CoordinateSystemProvider, Rotateable, Vec2, Vec3, Zeroable},
-    light::{Light, SampleLightResult},
+    light::{light_sampler::LightSampler, Light, SampleLightResult},
     object::{intersection::Intersection, ray::Ray},
     scene::Scene,
 };
@@ -117,12 +117,13 @@ impl PathTracerShader {
         color
     }
 
-    fn diffuse_reflection(
+    fn diffuse_reflection<L: LightSampler>(
         &self,
         intersection: &Intersection,
         material: &Brdf,
         scene: &Scene,
         depth: u32,
+        light_sampler: &L,
     ) -> Color {
         let mut rng = rand::thread_rng();
         let randoms = [rng.gen::<f64>(), rng.gen::<f64>()];
@@ -145,10 +146,15 @@ impl PathTracerShader {
             &d_around.rotate(&rx, &ry, &gn),
             gn,
         );
-        let d_intersection = scene.trace(&diffuse);
+        let d_intersection = scene.trace(&diffuse, light_sampler);
         if let Some(d_intersection) = d_intersection {
             if !d_intersection.is_light() {
-                let r_color = self.shade(&d_intersection.into(), scene, Some(depth + 1));
+                let r_color = self.shade(
+                    &d_intersection.into(),
+                    scene,
+                    Some(depth + 1),
+                    light_sampler,
+                );
 
                 return (Color::from_column_slice(&[
                     material[0] as f64,
@@ -162,12 +168,13 @@ impl PathTracerShader {
         Color::default()
     }
 
-    fn specular_reflection(
+    fn specular_reflection<L: LightSampler>(
         &self,
         intersection: &Intersection,
         material: &Brdf,
         scene: &Scene,
         depth: u32,
+        light_sampler: &L,
     ) -> Color {
         let gn = intersection.geometric_normal();
         let wo = intersection.w_outgoing();
@@ -177,8 +184,13 @@ impl PathTracerShader {
         let r_dir = 2.0 * cos * gn - wo;
         let specular = Ray::new_with_adjusted_origin(intersection.point(), &r_dir, gn);
 
-        let specular_intersection = scene.trace(&specular);
-        let r_color = self.shade(&specular_intersection, scene, Some(depth + 1));
+        let specular_intersection = scene.trace(&specular, light_sampler);
+        let r_color = self.shade(
+            &specular_intersection,
+            scene,
+            Some(depth + 1),
+            light_sampler,
+        );
 
         Vec3::from_column_slice(&[material[0] as f64, material[1] as f64, material[2] as f64])
             .component_mul(&r_color)
@@ -186,11 +198,12 @@ impl PathTracerShader {
 }
 
 impl Shader for PathTracerShader {
-    fn shade(
+    fn shade<L: LightSampler>(
         &self,
         intersection: &Option<Intersection>,
         scene: &Scene,
         depth: Option<u32>,
+        light_sampler: &L,
     ) -> Color {
         let mut color = Color::default();
         let Some(intersection) = intersection else {
@@ -234,9 +247,11 @@ impl Shader for PathTracerShader {
             let rnd = rng.gen::<f64>();
 
             let l_color = if rnd <= s_p || s_p >= (1. - f64::EPSILON) {
-                self.specular_reflection(intersection, &specular_a, scene, depth) / s_p
+                self.specular_reflection(intersection, &specular_a, scene, depth, light_sampler)
+                    / s_p
             } else {
-                self.diffuse_reflection(intersection, &diffuse_a, scene, depth) / (1. - s_p)
+                self.diffuse_reflection(intersection, &diffuse_a, scene, depth, light_sampler)
+                    / (1. - s_p)
             };
             color += if depth < MAX_DEPTH {
                 l_color

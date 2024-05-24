@@ -1,6 +1,7 @@
 use tobj::Material;
 
 use crate::helpers::{mul_vec3_with_rgb, Vec3, Zeroable};
+use crate::light::light_sampler::LightSampler;
 use crate::light::SampleLightResult;
 use crate::object::ray::Ray;
 use crate::scene::Scene;
@@ -16,7 +17,13 @@ impl WhittedShader {
         Self { background }
     }
 
-    fn specular_reflection(&self, intersection: &Intersection, scene: &Scene, depth: u32) -> Color {
+    fn specular_reflection<L: LightSampler>(
+        &self,
+        intersection: &Intersection,
+        scene: &Scene,
+        depth: u32,
+        light_sampler: &L,
+    ) -> Color {
         let wo = intersection.w_outgoing();
         let gn = intersection.geometric_normal();
 
@@ -26,9 +33,9 @@ impl WhittedShader {
         let mut specular = Ray::new(&intersection.point(), &rdir);
         specular.adjust_origin(gn);
 
-        let intersection = scene.trace(&specular);
+        let intersection = scene.trace(&specular, light_sampler);
 
-        self.shade(&intersection, scene, Some(depth + 1))
+        self.shade(&intersection, scene, Some(depth + 1), light_sampler)
     }
 
     fn direct_lighting(
@@ -87,11 +94,12 @@ impl WhittedShader {
 }
 
 impl Shader for WhittedShader {
-    fn shade(
+    fn shade<L: LightSampler>(
         &self,
         intersection: &Option<Intersection>,
         scene: &Scene,
         depth: Option<u32>,
+        light_sampler: &L,
     ) -> Color {
         let depth = depth.unwrap_or(0);
         let mut color = Color::new(0.0, 0.0, 0.0);
@@ -112,7 +120,7 @@ impl Shader for WhittedShader {
 
         if let Some(specular_material) = material.specular {
             if !specular_material.is_zero() && depth < 3 {
-                color += self.specular_reflection(intersection, scene, depth + 1);
+                color += self.specular_reflection(intersection, scene, depth + 1, light_sampler);
             }
         }
 

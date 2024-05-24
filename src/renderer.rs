@@ -5,7 +5,7 @@ use crate::{
     helpers::{Color, Vec3},
     image::Image,
     scene::Scene,
-    shader::{better_path_tracer_shader::PathTracer, BetterShader, Shader},
+    shader::{better_path_tracer_shader::PathTracer, BetterShader},
 };
 
 pub struct Renderer {
@@ -25,6 +25,7 @@ impl Renderer {
         let width = self.scene.width();
         let height = self.scene.height();
         let shader = PathTracer::new(Vec3::new(0.05, 0.05, 0.55));
+        let light_sampler = self.scene.create_light_sampler();
 
         let pixels_color: Vec<Color> = (0..height)
             .into_par_iter()
@@ -36,8 +37,14 @@ impl Renderer {
                         .fold(Color::default(), |a, _| {
                             let mut rng = fastrand::Rng::new();
                             let jitter = Vector2::new(rng.f64(), rng.f64());
-                            let intersection = self.scene.cast_ray(x, y, &jitter);
-                            let color = shader.shade(&intersection, &self.scene, None, &mut rng);
+                            let intersection = self.scene.cast_ray(x, y, &jitter, &light_sampler);
+                            let color = shader.shade(
+                                &intersection,
+                                &self.scene,
+                                None,
+                                &light_sampler,
+                                &mut rng,
+                            );
                             a + color
                         });
                 color / self.samples_per_pixel as f64

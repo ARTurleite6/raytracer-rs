@@ -1,6 +1,7 @@
 {
   "model_file": "models/cornell_box_VI.obj",
-  "samples_per_pixel": 2048,
+  "samples_per_pixel": 128,
+  "output_file": "cornell_box_1024spp.png",
   "lights": [
     {
       "type": "Area",

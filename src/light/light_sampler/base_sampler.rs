@@ -16,16 +16,16 @@ use crate::{
 use super::{HasBaseSampler, LightSampler, SampleLight};
 
 #[derive(Debug)]
-pub struct BaseSampler {
-    pub(super) ambient_lights: Vec<AmbientLight>,
-    pub(super) positional_lights: Vec<Light>,
+pub struct BaseSampler<'a> {
+    pub(super) ambient_lights: Vec<&'a AmbientLight>,
+    pub(super) positional_lights: Vec<&'a Light>,
     pub(super) weights: Vec<f64>,
 }
 
-impl BaseSampler {
-    pub fn new(lights: Vec<Light>) -> Self {
-        let (ambient_lights, positional_lights): (Vec<Light>, Vec<Light>) =
-            lights.into_iter().partition(Light::is_ambient_light);
+impl<'a> BaseSampler<'a> {
+    pub fn new(lights: impl Iterator<Item = &'a Light>) -> Self {
+        let (ambient_lights, positional_lights): (Vec<&Light>, Vec<&Light>) =
+            lights.partition(|&light| light.is_ambient_light());
 
         let ambient_lights = ambient_lights
             .into_iter()
@@ -47,18 +47,15 @@ impl BaseSampler {
     }
 }
 
-impl LightSampler for BaseSampler {
-    fn geometric_lights(&self) -> Vec<AreaLight> {
-        self.positional_lights
-            .iter()
-            .filter_map(|light| {
-                if let Light::Area(light) = light {
-                    Some(light.clone())
-                } else {
-                    None
-                }
-            })
-            .collect()
+impl LightSampler for BaseSampler<'_> {
+    fn geometric_lights(&self) -> impl Iterator<Item = &AreaLight> {
+        self.positional_lights.iter().filter_map(|light| {
+            if let Light::Area(light) = light {
+                Some(light)
+            } else {
+                None
+            }
+        })
     }
 
     fn sample_ambient_lights(&self, ambient_component: [f32; 3]) -> Color {
@@ -88,7 +85,7 @@ impl LightSampler for BaseSampler {
     }
 }
 
-impl HasBaseSampler for BaseSampler {
+impl HasBaseSampler for BaseSampler<'_> {
     fn base_sampler(&self) -> &BaseSampler {
         self
     }

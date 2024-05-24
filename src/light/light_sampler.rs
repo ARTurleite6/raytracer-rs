@@ -24,7 +24,7 @@ pub trait LightSampler: HasBaseSampler {
         self.base_sampler().sample_ambient_lights(ambient_component)
     }
 
-    fn geometric_lights(&self) -> Vec<AreaLight> {
+    fn geometric_lights(&self) -> impl Iterator<Item = &AreaLight> {
         self.base_sampler().geometric_lights()
     }
 

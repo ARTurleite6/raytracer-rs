@@ -21,7 +21,7 @@ impl Intersectable for Mesh {
             return None;
         }
 
-        let mut intersection = get_min_intersection(ray, &self.faces);
+        let mut intersection = get_min_intersection(ray, self.faces.iter());
         if let Some(material_id) = self.material_id {
             if let Some(intersection) = &mut intersection {
                 intersection.brdf = Some(MaterialInformation {

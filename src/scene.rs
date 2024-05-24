@@ -6,7 +6,6 @@ use tobj::{Material, GPU_LOAD_OPTIONS};
 use crate::{
     camera::{Camera, CameraArgs},
     light::{
-        area_light::AreaLight,
         light_sampler::{power_sampler::PowerLightSampler, LightSampler},
         Light,
     },
@@ -21,8 +20,6 @@ pub struct Scene {
     materials: Vec<Material>,
     objects: Vec<Mesh>,
     lights: Vec<Light>,
-    light_sampler: Box<dyn LightSampler + Send + Sync>,
-    geometric_lights: Vec<AreaLight>,
     camera: Camera,
 }
 
@@ -43,10 +40,6 @@ impl Scene {
 
     pub fn height(&self) -> usize {
         self.camera.height()
-    }
-
-    pub fn light_sampler(&self) -> &dyn LightSampler {
-        self.light_sampler.as_ref()
     }
 
     pub fn lights(&self) -> &[Light] {
@@ -70,25 +63,24 @@ impl Scene {
 
         let objects = models.into_iter().map(Mesh::from).collect();
 
-        let light_sampler = Box::new(PowerLightSampler::new(lights.clone()));
-        let geometric_lights = light_sampler.geometric_lights();
-
         Ok(Self {
             lights,
             objects,
             camera,
             materials: materials?,
-            geometric_lights,
-            light_sampler,
         })
     }
 
-    pub fn trace(&self, ray: &Ray) -> Option<Intersection> {
-        let geometric_lights = &self.geometric_lights;
+    pub fn create_light_sampler(&self) -> PowerLightSampler {
+        PowerLightSampler::new(self.lights.iter())
+    }
 
-        let intersection = get_min_intersection(ray, &self.objects);
+    pub fn trace<L: LightSampler>(&self, ray: &Ray, light_sampler: &L) -> Option<Intersection> {
+        let geometric_lights = light_sampler.geometric_lights();
 
-        let light_intersection = get_min_intersection(ray, &geometric_lights);
+        let intersection = get_min_intersection(ray, self.objects.iter());
+
+        let light_intersection = get_min_intersection(ray, geometric_lights);
 
         let mut min_intersection = [intersection, light_intersection]
             .into_iter()
@@ -110,8 +102,14 @@ impl Scene {
         Some(min_intersection)
     }
 
-    pub fn cast_ray(&self, x: usize, y: usize, jitter: &Vector2<f64>) -> Option<Intersection> {
+    pub fn cast_ray<L: LightSampler>(
+        &self,
+        x: usize,
+        y: usize,
+        jitter: &Vector2<f64>,
+        light_sampler: &L,
+    ) -> Option<Intersection> {
         let ray = self.camera.get_ray(x, y, jitter);
-        self.trace(&ray)
+        self.trace(&ray, light_sampler)
     }
 }
