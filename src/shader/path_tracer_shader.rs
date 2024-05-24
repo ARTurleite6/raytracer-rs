@@ -42,14 +42,19 @@ impl PathTracerShader {
                     if let Some(ambient) = brdf.ambient {
                         if !ambient.is_zero() {
                             let ambient = [ambient[0] as f64, ambient[1] as f64, ambient[2] as f64];
-                            color += Vec3::from(ambient).component_mul(&ambient_light.l());
+                            color += Vec3::from(ambient).component_mul(&ambient_light.l().color);
                         }
                     }
                 }
                 Light::Point(point_light) => {
                     if let Some(diffuse) = brdf.diffuse {
                         if !diffuse.is_zero() {
-                            let (light_color, light_pos) = point_light.l();
+                            let SampleLightResult {
+                                color: light_color,
+                                point: light_pos,
+                                ..
+                            } = point_light.l();
+                            let light_pos = light_pos.unwrap();
                             let mut light_dir = light_pos - intersection.point();
                             let light_distance = light_dir.norm();
                             light_dir.normalize_mut();
@@ -57,7 +62,7 @@ impl PathTracerShader {
                             let cos = light_dir.dot(&intersection.shading_normal());
 
                             if cos > 0.0 {
-                                let mut shadow = Ray::new(intersection.point(), light_dir);
+                                let mut shadow = Ray::new(&intersection.point(), &light_dir);
                                 shadow.adjust_origin(intersection.geometric_normal());
                                 if scene.visibility(&shadow, light_distance) {
                                     let diffuse =
@@ -78,7 +83,8 @@ impl PathTracerShader {
                                 color: light_color,
                                 point,
                                 pdf,
-                            } = area_light.l(rnd);
+                                ..
+                            } = area_light.l(&rnd);
                             let point = point.unwrap();
                             let _i_point = intersection.point();
 
@@ -90,7 +96,7 @@ impl PathTracerShader {
                             let cos_l_la = light_dir.dot(&area_light.normal());
 
                             if cos_l > 0.0 && cos_l_la <= 0.0 {
-                                let mut shadow = Ray::new(intersection.point(), light_dir);
+                                let mut shadow = Ray::new(&intersection.point(), &light_dir);
                                 shadow.adjust_origin(intersection.geometric_normal());
 
                                 if scene.visibility(&shadow, light_distance - 0.0001) {
@@ -134,8 +140,11 @@ impl PathTracerShader {
         let gn = intersection.geometric_normal();
         let (rx, ry) = gn.coordinate_system();
 
-        let diffuse =
-            Ray::new_with_adjusted_origin(intersection.point(), d_around.rotate(rx, ry, gn), gn);
+        let diffuse = Ray::new_with_adjusted_origin(
+            intersection.point(),
+            &d_around.rotate(&rx, &ry, &gn),
+            gn,
+        );
         let d_intersection = scene.trace(&diffuse);
         if let Some(d_intersection) = d_intersection {
             if !d_intersection.is_light() {
@@ -166,7 +175,7 @@ impl PathTracerShader {
         let cos = gn.dot(&wo);
 
         let r_dir = 2.0 * cos * gn - wo;
-        let specular = Ray::new_with_adjusted_origin(intersection.point(), r_dir, gn);
+        let specular = Ray::new_with_adjusted_origin(intersection.point(), &r_dir, gn);
 
         let specular_intersection = scene.trace(&specular);
         let r_color = self.shade(&specular_intersection, scene, Some(depth + 1));
@@ -225,7 +234,6 @@ impl Shader for PathTracerShader {
             let rnd = rng.gen::<f64>();
 
             let l_color = if rnd <= s_p || s_p >= (1. - f64::EPSILON) {
-                // TODO: the s_p maybe is wrong as the image now is bad
                 self.specular_reflection(intersection, &specular_a, scene, depth) / s_p
             } else {
                 self.diffuse_reflection(intersection, &diffuse_a, scene, depth) / (1. - s_p)

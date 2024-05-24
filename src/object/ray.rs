@@ -10,18 +10,24 @@ pub struct Ray {
 }
 
 impl Ray {
-    pub fn new(origin: Vec3, direction: Vec3) -> Self {
-        Self { origin, direction }
+    pub fn new(origin: &Vec3, direction: &Vec3) -> Self {
+        Self {
+            origin: origin.clone(),
+            direction: direction.clone(),
+        }
     }
 
-    pub fn new_with_adjusted_origin(origin: Vec3, direction: Vec3, normal: Vec3) -> Self {
-        let mut ray = Self { origin, direction };
+    pub fn new_with_adjusted_origin(origin: &Vec3, direction: &Vec3, normal: &Vec3) -> Self {
+        let mut ray = Self {
+            origin: *origin,
+            direction: *direction,
+        };
 
         ray.adjust_origin(normal);
         ray
     }
 
-    pub fn adjust_origin(&mut self, normal: Vec3) {
+    pub fn adjust_origin(&mut self, normal: &Vec3) {
         let mut offset = ADJUST_VALUE * normal;
 
         if self.direction.dot(&normal) < 0.0 {

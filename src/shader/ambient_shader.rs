@@ -44,8 +44,10 @@ impl Shader for AmbientShader {
                                 if let Light::Ambient(ambient_light) = light {
                                     let ambient =
                                         [ambient[0] as f64, ambient[1] as f64, ambient[2] as f64];
-                                    color +=
-                                        mul_vec3_with_rgb(Vec3::from(ambient), ambient_light.l());
+                                    color += mul_vec3_with_rgb(
+                                        &Vec3::from(ambient),
+                                        &ambient_light.l().color,
+                                    );
                                 }
                             }
                         }

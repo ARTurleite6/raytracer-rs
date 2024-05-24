@@ -70,7 +70,7 @@ impl Camera {
         }
     }
 
-    pub fn get_ray(&self, x: usize, y: usize, jitter: Vector2<f64>) -> Ray {
+    pub fn get_ray(&self, x: usize, y: usize, jitter: &Vector2<f64>) -> Ray {
         let xf = x as f64;
         let yf = y as f64;
         let xs = (2.0 * (xf + jitter.x) / self.width as f64) - 1.0;
@@ -80,8 +80,8 @@ impl Camera {
         let yc = ys * self.angle_h;
 
         Ray::new(
-            self.position,
-            self.camera_to_world * Vec3::new(xc, yc, 1.0).normalize(),
+            &self.position,
+            &(self.camera_to_world * Vec3::new(xc, yc, 1.0).normalize()),
         )
     }
 

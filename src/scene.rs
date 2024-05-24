@@ -5,7 +5,11 @@ use tobj::{Material, GPU_LOAD_OPTIONS};
 
 use crate::{
     camera::{Camera, CameraArgs},
-    light::{area_light::AreaLight, Light},
+    light::{
+        area_light::AreaLight,
+        light_sampler::{power_sampler::PowerLightSampler, LightSampler},
+        Light,
+    },
     object::{
         intersection::{get_min_intersection, Intersectable, Intersection, MaterialInformation},
         mesh::Mesh,
@@ -13,11 +17,12 @@ use crate::{
     },
 };
 
-#[derive(Debug, Default)]
 pub struct Scene {
     materials: Vec<Material>,
     objects: Vec<Mesh>,
     lights: Vec<Light>,
+    light_sampler: Box<dyn LightSampler + Send + Sync>,
+    geometric_lights: Vec<AreaLight>,
     camera: Camera,
 }
 
@@ -40,6 +45,10 @@ impl Scene {
         self.camera.height()
     }
 
+    pub fn light_sampler(&self) -> &dyn LightSampler {
+        self.light_sampler.as_ref()
+    }
+
     pub fn lights(&self) -> &[Light] {
         &self.lights
     }
@@ -57,137 +66,25 @@ impl Scene {
         camera: Camera,
         lights: Vec<Light>,
     ) -> Result<Self, Box<dyn Error>> {
-        let mut scene = Scene::default();
         let (models, materials) = tobj::load_obj(obj_path, &GPU_LOAD_OPTIONS)?;
 
-        scene.camera = camera;
-        scene.materials = materials?;
+        let objects = models.into_iter().map(Mesh::from).collect();
 
-        println!("# of models: {}", models.len());
-        println!("# of materials: {}", scene.materials.len());
+        let light_sampler = Box::new(PowerLightSampler::new(lights.clone()));
+        let geometric_lights = light_sampler.geometric_lights();
 
-        scene.objects = models.into_iter().map(Mesh::from).collect();
-
-        scene.lights = lights;
-
-        // scene.lights = vec![
-        //     // Light::Ambient(AmbientLight::new(Vec3::new(0.05, 0.05, 0.05))),
-        //     Light::AreaLight(AreaLight::with_normal(
-        //         [
-        //             Vec3::new(248.0, 548.0, 182.0),
-        //             Vec3::new(328.0, 548.0, 262.0),
-        //             Vec3::new(248.0, 548.0, 262.0),
-        //         ],
-        //         Vec3::new(0.0, -1.0, 0.0),
-        //         Color::new(0.2, 0.2, 0.2),
-        //     )),
-        //     Light::AreaLight(AreaLight::with_normal(
-        //         [
-        //             Vec3::new(328., 548., 262.),
-        //             Vec3::new(248., 548., 182.),
-        //             Vec3::new(328., 548., 182.),
-        //         ],
-        //         Vec3::new(0.0, -1.0, 0.0),
-        //         Color::new(0.2, 0.2, 0.2),
-        //     )),
-        //     Light::AreaLight(AreaLight::with_normal(
-        //         [
-        //             Vec3::new(448., 548., 382.),
-        //             Vec3::new(528., 548., 462.),
-        //             Vec3::new(448., 548., 462.),
-        //         ],
-        //         Vec3::new(0.0, -1.0, 0.0),
-        //         Color::new(0.2, 0.2, 0.2),
-        //     )),
-        //     Light::AreaLight(AreaLight::with_normal(
-        //         [
-        //             Vec3::new(448., 548., 382.),
-        //             Vec3::new(528., 548., 462.),
-        //             Vec3::new(448., 548., 462.),
-        //         ],
-        //         Vec3::new(0.0, -1.0, 0.0),
-        //         Color::new(0.2, 0.2, 0.2),
-        //     )),
-        //     Light::AreaLight(AreaLight::with_normal(
-        //         [
-        //             Vec3::new(528., 548., 462.),
-        //             Vec3::new(448., 548., 382.),
-        //             Vec3::new(528., 548., 382.),
-        //         ],
-        //         Vec3::new(0.0, -1.0, 0.0),
-        //         Color::new(0.2, 0.2, 0.2),
-        //     )),
-        //     Light::AreaLight(AreaLight::with_normal(
-        //         [
-        //             Vec3::new(48., 548., 382.),
-        //             Vec3::new(128., 548., 462.),
-        //             Vec3::new(48., 548., 462.),
-        //         ],
-        //         Vec3::new(0.0, -1.0, 0.0),
-        //         Color::new(0.2, 0.2, 0.2),
-        //     )),
-        //     Light::AreaLight(AreaLight::with_normal(
-        //         [
-        //             Vec3::new(128., 548., 462.),
-        //             Vec3::new(48., 548., 382.),
-        //             Vec3::new(128., 548., 382.),
-        //         ],
-        //         Vec3::new(0.0, -1.0, 0.0),
-        //         Color::new(0.2, 0.2, 0.2),
-        //     )),
-        //     Light::AreaLight(AreaLight::with_normal(
-        //         [
-        //             Vec3::new(48., 548., 82.),
-        //             Vec3::new(128., 548., 162.),
-        //             Vec3::new(48., 548., 162.),
-        //         ],
-        //         Vec3::new(0.0, -1.0, 0.0),
-        //         Color::new(0.2, 0.2, 0.2),
-        //     )),
-        //     Light::AreaLight(AreaLight::with_normal(
-        //         [
-        //             Vec3::new(128., 548., 162.),
-        //             Vec3::new(48., 548., 82.),
-        //             Vec3::new(128., 548., 82.),
-        //         ],
-        //         Vec3::new(0.0, -1.0, 0.0),
-        //         Color::new(0.2, 0.2, 0.2),
-        //     )),
-        //     Light::AreaLight(AreaLight::with_normal(
-        //         [
-        //             Vec3::new(448., 548., 82.),
-        //             Vec3::new(528., 548., 162.),
-        //             Vec3::new(448., 548., 162.),
-        //         ],
-        //         Vec3::new(0.0, -1.0, 0.0),
-        //         Color::new(0.2, 0.2, 0.2),
-        //     )),
-        //     Light::AreaLight(AreaLight::with_normal(
-        //         [
-        //             Vec3::new(528., 548., 162.),
-        //             Vec3::new(448., 548., 82.),
-        //             Vec3::new(528., 548., 82.),
-        //         ],
-        //         Vec3::new(0.0, -1.0, 0.0),
-        //         Color::new(0.2, 0.2, 0.2),
-        //     )),
-        // ];
-
-        Ok(scene)
+        Ok(Self {
+            lights,
+            objects,
+            camera,
+            materials: materials?,
+            geometric_lights,
+            light_sampler,
+        })
     }
 
     pub fn trace(&self, ray: &Ray) -> Option<Intersection> {
-        let geometric_lights: Vec<AreaLight> = self
-            .lights
-            .iter()
-            .filter_map(|light| {
-                if let Light::Area(light) = light {
-                    Some(light.clone())
-                } else {
-                    None
-                }
-            })
-            .collect();
+        let geometric_lights = &self.geometric_lights;
 
         let intersection = get_min_intersection(ray, &self.objects);
 
@@ -213,7 +110,7 @@ impl Scene {
         Some(min_intersection)
     }
 
-    pub fn cast_ray(&self, x: usize, y: usize, jitter: Vector2<f64>) -> Option<Intersection> {
+    pub fn cast_ray(&self, x: usize, y: usize, jitter: &Vector2<f64>) -> Option<Intersection> {
         let ray = self.camera.get_ray(x, y, jitter);
         self.trace(&ray)
     }

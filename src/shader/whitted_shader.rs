@@ -1,6 +1,7 @@
 use tobj::Material;
 
 use crate::helpers::{mul_vec3_with_rgb, Vec3, Zeroable};
+use crate::light::SampleLightResult;
 use crate::object::ray::Ray;
 use crate::scene::Scene;
 use crate::{helpers::Color, light::Light, object::intersection::Intersection, shader::Shader};
@@ -22,7 +23,7 @@ impl WhittedShader {
         let cos = gn.dot(&wo);
 
         let rdir = (2.0 * cos * gn) - wo;
-        let mut specular = Ray::new(intersection.point(), rdir);
+        let mut specular = Ray::new(&intersection.point(), &rdir);
         specular.adjust_origin(gn);
 
         let intersection = scene.trace(&specular);
@@ -44,14 +45,20 @@ impl WhittedShader {
                     if let Some(ambient) = brdf.ambient {
                         if !ambient.is_zero() {
                             let ambient = [ambient[0] as f64, ambient[1] as f64, ambient[2] as f64];
-                            color += mul_vec3_with_rgb(Vec3::from(ambient), ambient_light.l());
+                            color +=
+                                mul_vec3_with_rgb(&Vec3::from(ambient), &ambient_light.l().color);
                         }
                     }
                 }
                 Light::Point(point_light) => {
                     if let Some(diffuse) = brdf.diffuse {
                         if !diffuse.is_zero() {
-                            let (light_color, light_pos) = point_light.l();
+                            let SampleLightResult {
+                                color: light_color,
+                                point: light_pos,
+                                ..
+                            } = point_light.l();
+                            let light_pos = light_pos.unwrap();
                             let mut light_dir = light_pos - intersection.point();
                             let light_distance = light_dir.norm();
                             light_dir.normalize_mut();
@@ -59,13 +66,13 @@ impl WhittedShader {
                             let cos = light_dir.dot(&intersection.shading_normal());
 
                             if cos > 0.0 {
-                                let mut shadow = Ray::new(intersection.point(), light_dir);
+                                let mut shadow = Ray::new(&intersection.point(), &light_dir);
                                 shadow.adjust_origin(intersection.geometric_normal());
                                 if scene.visibility(&shadow, light_distance) {
                                     let diffuse =
                                         [diffuse[0] as f64, diffuse[1] as f64, diffuse[2] as f64];
                                     color +=
-                                        mul_vec3_with_rgb(Vec3::from(diffuse), light_color) * cos;
+                                        mul_vec3_with_rgb(&Vec3::from(diffuse), &light_color) * cos;
                                 }
                             }
                         }

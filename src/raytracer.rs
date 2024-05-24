@@ -18,7 +18,6 @@ fn default_output_file() -> String {
     "output.png".into()
 }
 
-#[derive(Debug)]
 pub struct RayTracer {
     renderer: Renderer,
 }
