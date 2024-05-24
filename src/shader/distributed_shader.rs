@@ -49,14 +49,20 @@ impl DistributedShader {
                     if let Some(ambient) = brdf.ambient {
                         if !ambient.is_zero() {
                             let ambient = [ambient[0] as f64, ambient[1] as f64, ambient[2] as f64];
-                            color += mul_vec3_with_rgb(&Vec3::from(ambient), &ambient_light.l());
+                            color +=
+                                mul_vec3_with_rgb(&Vec3::from(ambient), &ambient_light.l().color);
                         }
                     }
                 }
                 Light::Point(point_light) => {
                     if let Some(diffuse) = brdf.diffuse {
                         if !diffuse.is_zero() {
-                            let (light_color, light_pos) = point_light.l();
+                            let SampleLightResult {
+                                color: light_color,
+                                point: light_pos,
+                                ..
+                            } = point_light.l();
+                            let light_pos = light_pos.unwrap();
                             let mut light_dir = light_pos - intersection.point();
                             let light_distance = light_dir.norm();
                             light_dir.normalize_mut();
@@ -86,6 +92,7 @@ impl DistributedShader {
                                 color: light_color,
                                 point,
                                 pdf,
+                                ..
                             } = area_light.l(&rnd);
                             let point = point.unwrap();
 

@@ -42,14 +42,19 @@ impl PathTracerShader {
                     if let Some(ambient) = brdf.ambient {
                         if !ambient.is_zero() {
                             let ambient = [ambient[0] as f64, ambient[1] as f64, ambient[2] as f64];
-                            color += Vec3::from(ambient).component_mul(&ambient_light.l());
+                            color += Vec3::from(ambient).component_mul(&ambient_light.l().color);
                         }
                     }
                 }
                 Light::Point(point_light) => {
                     if let Some(diffuse) = brdf.diffuse {
                         if !diffuse.is_zero() {
-                            let (light_color, light_pos) = point_light.l();
+                            let SampleLightResult {
+                                color: light_color,
+                                point: light_pos,
+                                ..
+                            } = point_light.l();
+                            let light_pos = light_pos.unwrap();
                             let mut light_dir = light_pos - intersection.point();
                             let light_distance = light_dir.norm();
                             light_dir.normalize_mut();
@@ -78,6 +83,7 @@ impl PathTracerShader {
                                 color: light_color,
                                 point,
                                 pdf,
+                                ..
                             } = area_light.l(&rnd);
                             let point = point.unwrap();
                             let _i_point = intersection.point();

@@ -1,12 +1,11 @@
 use nalgebra::Vector2;
-use rand::Rng;
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 use crate::{
     helpers::{Color, Vec3},
     image::Image,
     scene::Scene,
-    shader::{path_tracer_shader::PathTracerShader, Shader},
+    shader::{better_path_tracer_shader::PathTracer, BetterShader, Shader},
 };
 
 pub struct Renderer {
@@ -25,7 +24,7 @@ impl Renderer {
     pub fn render(&self) -> Result<Image, Box<dyn std::error::Error>> {
         let width = self.scene.width();
         let height = self.scene.height();
-        let shader = PathTracerShader::new(Vec3::new(0.05, 0.05, 0.55));
+        let shader = PathTracer::new(Vec3::new(0.05, 0.05, 0.55));
 
         let pixels_color: Vec<Color> = (0..height)
             .into_par_iter()
@@ -35,10 +34,10 @@ impl Renderer {
                     (0..self.samples_per_pixel)
                         .into_iter()
                         .fold(Color::default(), |a, _| {
-                            let mut rng = rand::thread_rng();
-                            let jitter = Vector2::new(rng.gen::<f64>(), rng.gen::<f64>());
+                            let mut rng = fastrand::Rng::new();
+                            let jitter = Vector2::new(rng.f64(), rng.f64());
                             let intersection = self.scene.cast_ray(x, y, &jitter);
-                            let color = shader.shade(&intersection, &self.scene, None);
+                            let color = shader.shade(&intersection, &self.scene, None, &mut rng);
                             a + color
                         });
                 color / self.samples_per_pixel as f64

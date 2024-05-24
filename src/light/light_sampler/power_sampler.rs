@@ -1,6 +1,11 @@
+use fastrand::Rng;
+
 use crate::light::{light_sample_context::LightSampleContext, Light};
 
-use super::{base_sampler::BaseSampler, HasBaseSampler, LightSampler, SampleLight};
+use super::{
+    base_sampler::BaseSampler, cumulative_distribution::CDF, HasBaseSampler, LightSampler,
+    SampleLight,
+};
 
 #[derive(Debug)]
 pub struct PowerLightSampler {
@@ -17,23 +22,39 @@ impl PowerLightSampler {
 }
 
 impl LightSampler for PowerLightSampler {
-    fn sample(&self, _context: LightSampleContext) -> Option<SampleLight> {
-        todo!("falta implementar isto");
-        //let weights = self.base_sampler.positional_lights.iter().map(|light| {
-        //    let result = light.l();
+    fn sample(&self, context: LightSampleContext, rng: &mut Rng) -> Option<SampleLight> {
+        let mut weights: Vec<_> = self
+            .base_sampler
+            .positional_lights
+            .iter()
+            .map(|light| {
+                let sample = light
+                    .l(rng.into())
+                    .calculate_data(&light, context.intersection);
+                let cos = sample.cos.unwrap();
+                let distance = sample.distance.unwrap();
+                let power_gs = sample.power_gs;
+                (sample, power_gs / distance.powi(2) * cos)
+            })
+            .collect();
 
-        //    match light {
-        //        Light::Area(area) => {}
-        //    }
-        //});
+        let total_weight: f64 = weights.iter().map(|w| w.1).sum();
+        if total_weight > 0.0 {
+            weights.iter_mut().for_each(|weight| {
+                weight.1 /= total_weight;
+            });
+        }
 
-        //let dist = WeightedIndex::new(weights).ok()?;
-        //let mut rng = rand::thread_rng();
+        let dist = CDF::new(&weights);
+        let (index, (sample_result, weight)) = dist.sample(rng)?;
+        let light = self.base_sampler.positional_lights[index].clone();
+        let power = weight;
 
-        //Some(SampleLight {
-        //    light: self.base_sampler.positional_lights[dist.sample(&mut rng)].clone(),
-        //    power: 1. / self.base_sampler.positional_lights.len() as f64,
-        //})
+        Some(SampleLight {
+            light,
+            power: *power,
+            sample_result: sample_result.clone(),
+        })
     }
 }
 

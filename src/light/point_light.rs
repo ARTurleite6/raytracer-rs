@@ -1,19 +1,39 @@
 use serde::Deserialize;
 
-use crate::helpers::{Color, Vec3};
+use crate::helpers::{gray_scale, Color, Vec3};
+
+use super::SampleLightResult;
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct PointLight {
+pub struct PointLightArgs {
     color: Color,
     pos: Vec3,
 }
 
-impl PointLight {
-    pub fn distance(&self, point: &Vec3) -> f64 {
-        (self.pos - point).norm()
-    }
+#[derive(Debug, Clone)]
+pub struct PointLight {
+    color: Color,
+    pos: Vec3,
+    power_gs: f64,
+}
 
-    pub fn l(&self) -> (Color, Vec3) {
-        (self.color, self.pos)
+impl PointLight {
+    pub fn l(&self) -> SampleLightResult {
+        SampleLightResult {
+            power_gs: self.power_gs,
+            color: self.color,
+            point: self.pos.into(),
+            ..Default::default()
+        }
+    }
+}
+
+impl From<PointLightArgs> for PointLight {
+    fn from(value: PointLightArgs) -> Self {
+        Self {
+            color: value.color,
+            pos: value.pos,
+            power_gs: gray_scale(&value.color),
+        }
     }
 }

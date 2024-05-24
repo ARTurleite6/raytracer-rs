@@ -1,7 +1,7 @@
 use serde::Deserialize;
 
 use crate::{
-    helpers::{Color, Rotateable, Vec2, Vec3},
+    helpers::{gray_scale, Color, Vec2, Vec3},
     object::{
         face::{Face, FaceBuilder},
         intersection::Intersectable,
@@ -29,6 +29,7 @@ pub struct AreaLight {
     pdf: f64,
     intensity: Color,
     power: Color,
+    power_gs: f64,
 }
 
 impl AreaLight {
@@ -36,35 +37,13 @@ impl AreaLight {
         let gem = FaceBuilder::new(vertex).normal(normal).build();
         let pdf = 1.0 / gem.area();
         let intensity = power * pdf;
+        let power_gs = gray_scale(&intensity);
         Self {
             gem,
             pdf,
             intensity,
             power: *power,
-        }
-    }
-
-    pub fn intensity(&self) -> &Color {
-        &self.intensity
-    }
-
-    pub fn distance(&self, point: &Vec3) -> f64 {
-        let vertices = self.gem.vertices();
-        let normal = self.gem.normal();
-        let d = -vertices[0].dot(&normal);
-        (normal.dot(&point) + d).abs()
-    }
-
-    pub fn angle_cos(&self, normal: &Vec3) -> f64 {
-        let triangle_normal = self.gem.normal().face_forward(normal);
-
-        // Calculate the angle between the vector to the point and the triangle normal
-        let cos = normal.dot(&triangle_normal) / (normal.norm() * normal.norm());
-
-        if cos < 0. {
-            0.0
-        } else {
-            cos
+            power_gs,
         }
     }
 
@@ -87,9 +66,11 @@ impl AreaLight {
         );
 
         SampleLightResult {
+            power_gs: self.power_gs,
             color: self.intensity,
             pdf: self.pdf.into(),
             point: point.into(),
+            ..Default::default()
         }
     }
 }

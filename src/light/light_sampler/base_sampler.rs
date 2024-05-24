@@ -1,4 +1,9 @@
-use rand::distributions::{Distribution, WeightedIndex};
+use fastrand::Rng;
+use rand::{
+    distributions::{Distribution, WeightedIndex},
+    rngs::StdRng,
+    SeedableRng,
+};
 
 use crate::{
     helpers::{Color, Vec3},
@@ -65,17 +70,20 @@ impl LightSampler for BaseSampler {
 
         self.ambient_lights
             .iter()
-            .map(|light| Vec3::from(ambient).component_mul(&light.l()))
+            .map(|light| Vec3::from(ambient).component_mul(&light.l().color))
             .sum()
     }
 
-    fn sample(&self, _ctx: LightSampleContext) -> Option<SampleLight> {
-        let mut rng = rand::thread_rng();
+    fn sample(&self, _ctx: LightSampleContext, rng: &mut Rng) -> Option<SampleLight> {
         let dist = WeightedIndex::new(&self.weights).ok()?;
+        let mut std_rng = StdRng::from_entropy();
 
+        let light = self.positional_lights[dist.sample(&mut std_rng)].clone();
+        let sample_result = light.l(rng.into());
         Some(SampleLight {
-            light: self.positional_lights[dist.sample(&mut rng)].clone(),
+            light,
             power: 1. / self.positional_lights.len() as f64,
+            sample_result,
         })
     }
 }

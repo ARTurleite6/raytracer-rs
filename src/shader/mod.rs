@@ -1,3 +1,5 @@
+use fastrand::Rng;
+
 use crate::{helpers::Color, object::intersection::Intersection, scene::Scene};
 
 pub mod ambient_shader;
@@ -12,5 +14,15 @@ pub trait Shader {
         intersection: &Option<Intersection>,
         scene: &Scene,
         depth: Option<u32>,
+    ) -> Color;
+}
+
+pub trait BetterShader {
+    fn shade(
+        &self,
+        intersection: &Option<Intersection>,
+        scene: &Scene,
+        depth: Option<u32>,
+        rng: &mut Rng,
     ) -> Color;
 }
