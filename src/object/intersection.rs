@@ -4,7 +4,7 @@ use crate::helpers::{Color, Vec3};
 
 use super::ray::Ray;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct MaterialInformation {
     pub material: Option<Material>,
     pub material_id: usize,

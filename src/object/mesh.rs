@@ -36,6 +36,10 @@ impl Intersectable for Mesh {
 }
 
 impl Mesh {
+    pub fn faces(&self) -> &Vec<Face> {
+        &self.faces
+    }
+
     fn update_bounding_box(&mut self) {
         let (&(mut min_vert), &(mut max_vert)) = self.faces[0].get_bounding_box().get_min_max();
 
@@ -83,8 +87,13 @@ impl From<Model> for Mesh {
                 ),
             ];
 
-            obj.faces
-                .push(FaceBuilder::new(vertices).face_id(face).build());
+            let face_builder = FaceBuilder::new(vertices);
+            let face_builder = if let Some(material_id) = obj.material_id {
+                face_builder.material_id(material_id)
+            } else {
+                face_builder
+            };
+            obj.faces.push(face_builder.build());
 
             next_face = end;
         }

@@ -14,6 +14,7 @@ debug = true
 
 [dependencies]
 anyhow = "1.0.86"
+bvh = "0.9.0"
 clap = { version = "4.5.2", features = ["derive"] }
 fastrand = "2.1.0"
 image = "0.25.1"

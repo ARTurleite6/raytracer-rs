@@ -1,11 +1,15 @@
-use nalgebra::Vector3;
+use bvh::{
+    aabb::{Aabb, Bounded},
+    bounding_hierarchy::BHShape,
+};
+use nalgebra::{Point3, Vector3};
 use serde::Deserialize;
 
 use crate::helpers::{Rotateable, Vec3};
 
 use super::{
     bounding_box::BoundingBox,
-    intersection::{Intersectable, Intersection},
+    intersection::{Intersectable, Intersection, MaterialInformation},
     ray::Ray,
 };
 
@@ -13,6 +17,7 @@ const EPSILON: f64 = 0.0001;
 
 #[derive(Debug, Default)]
 pub struct FaceBuilder {
+    material_id: Option<usize>,
     face_id: Option<usize>,
     vertex: [Vec3; 3],
     normal: Option<Vec3>,
@@ -24,6 +29,11 @@ impl FaceBuilder {
             vertex,
             ..Default::default()
         }
+    }
+
+    pub fn material_id(mut self, material_id: usize) -> Self {
+        self.material_id = Some(material_id);
+        self
     }
 
     pub fn normal(mut self, normal: &Vec3) -> Self {
@@ -43,12 +53,16 @@ impl FaceBuilder {
 
 impl From<FaceBuilder> for Face {
     fn from(value: FaceBuilder) -> Self {
-        Self::new(value.vertex, value.normal)
+        let mut face = Self::new(value.face_id.unwrap_or(0), value.vertex, value.normal);
+        face.material_id = value.material_id;
+        face
     }
 }
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct Face {
+    face_id: usize,
+    material_id: Option<usize>,
     vertex: [Vec3; 3],
     normal: Vec3,
     bounding_box: BoundingBox,
@@ -56,7 +70,7 @@ pub struct Face {
 }
 
 impl Face {
-    pub fn new(vertex: [Vec3; 3], normal: Option<Vec3>) -> Self {
+    pub fn new(face_id: usize, vertex: [Vec3; 3], normal: Option<Vec3>) -> Self {
         let bounding_box = BoundingBox::new(
             &vertex.iter().fold(vertex[0], |acc, new_vertex| {
                 Vector3::new(
@@ -89,6 +103,8 @@ impl Face {
                 .sqrt();
 
         Self {
+            face_id,
+            material_id: None,
             vertex,
             normal,
             bounding_box,
@@ -110,6 +126,24 @@ impl Face {
 
     pub fn area(&self) -> f64 {
         self.area
+    }
+}
+
+impl Bounded<f64, 3> for Face {
+    fn aabb(&self) -> bvh::aabb::Aabb<f64, 3> {
+        let (min, max) = self.bounding_box.get_min_max();
+
+        Aabb::with_bounds(Point3::from(*min), Point3::from(*max))
+    }
+}
+
+impl BHShape<f64, 3> for Face {
+    fn set_bh_node_index(&mut self, face_id: usize) {
+        self.face_id = face_id
+    }
+
+    fn bh_node_index(&self) -> usize {
+        self.face_id
     }
 }
 
@@ -148,14 +182,15 @@ impl Intersectable for Face {
             let wo = -1.0 * ray.direction();
 
             let normal = self.normal.face_forward(&wo);
-            Some(Intersection::new(
-                intersection_point,
-                normal,
-                normal,
-                wo,
-                t,
-                None,
-            ))
+            let mut intersection =
+                Intersection::new(intersection_point, normal, normal, wo, t, None);
+            if let Some(material_id) = self.material_id {
+                intersection.brdf = Some(MaterialInformation {
+                    material_id,
+                    ..Default::default()
+                });
+            }
+            Some(intersection)
         } else {
             None
         }
