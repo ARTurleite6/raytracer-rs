@@ -1,9 +1,10 @@
-use std::error::Error;
+use std::{error::Error, rc::Rc};
 
 use nalgebra::Vector2;
 use tobj::{Material, GPU_LOAD_OPTIONS};
 
 use crate::{
+    bvh,
     camera::{Camera, CameraArgs},
     light::{
         area_light::AreaLight,
@@ -11,6 +12,7 @@ use crate::{
         Light,
     },
     object::{
+        bounding_box::Bounded,
         intersection::{get_min_intersection, Intersectable, Intersection, MaterialInformation},
         mesh::Mesh,
         ray::Ray,
@@ -68,7 +70,15 @@ impl Scene {
     ) -> Result<Self, Box<dyn Error>> {
         let (models, materials) = tobj::load_obj(obj_path, &GPU_LOAD_OPTIONS)?;
 
-        let objects = models.into_iter().map(Mesh::from).collect();
+        let objects: Vec<Mesh> = models.into_iter().map(Mesh::from).collect();
+
+        let bvh = bvh::BVH::new(
+            &objects
+                .iter()
+                .map(|mesh| Rc::new(mesh.clone()) as Rc<dyn Bounded>)
+                .collect(),
+        );
+        dbg!(bvh);
 
         let light_sampler = Box::new(PowerLightSampler::new(lights.clone()));
         let geometric_lights = light_sampler.geometric_lights();

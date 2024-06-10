@@ -1,4 +1,7 @@
+use std::rc::Rc;
+
 use super::{
+    bounding_box::Bounded,
     face::FaceBuilder,
     intersection::{get_min_intersection, Intersectable, MaterialInformation},
 };
@@ -8,11 +11,17 @@ use tobj::Model;
 use super::{bounding_box::BoundingBox, face::Face, intersection::Intersection, ray::Ray};
 use crate::helpers::Comparable;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct Mesh {
     material_id: Option<usize>,
     faces: Vec<Face>,
     bounding_box: BoundingBox,
+}
+
+impl Intersectable for Rc<Mesh> {
+    fn intersect(&self, ray: &Ray) -> Option<Intersection> {
+        self.intersect(ray)
+    }
 }
 
 impl Intersectable for Mesh {
@@ -37,15 +46,22 @@ impl Intersectable for Mesh {
 
 impl Mesh {
     fn update_bounding_box(&mut self) {
-        let (&(mut min_vert), &(mut max_vert)) = self.faces[0].get_bounding_box().get_min_max();
+        let (&(mut min_vert), &(mut max_vert)) = self.faces[0].bounding_box().get_min_max();
 
         for face in self.faces.iter().skip(1) {
-            let (face_min_vert, face_max_vert) = face.get_bounding_box().get_min_max();
+            let bb = face.bounding_box();
+            let (face_min_vert, face_max_vert) = bb.get_min_max();
             min_vert = min_vert.min_between(face_min_vert);
             max_vert = max_vert.max_between(face_max_vert);
         }
 
         self.bounding_box = BoundingBox::new(&min_vert, &max_vert);
+    }
+}
+
+impl Bounded for Mesh {
+    fn bounding_box(&self) -> BoundingBox {
+        self.bounding_box
     }
 }
 

@@ -1,4 +1,4 @@
-mod bounding_box;
+pub mod bounding_box;
 pub mod face;
 pub mod intersection;
 pub mod mesh;

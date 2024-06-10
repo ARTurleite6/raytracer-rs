@@ -4,7 +4,7 @@ use serde::Deserialize;
 use crate::helpers::{Rotateable, Vec3};
 
 use super::{
-    bounding_box::BoundingBox,
+    bounding_box::{Bounded, BoundingBox},
     intersection::{Intersectable, Intersection},
     ray::Ray,
 };
@@ -104,12 +104,14 @@ impl Face {
         &self.vertex
     }
 
-    pub fn get_bounding_box(&self) -> &BoundingBox {
-        &self.bounding_box
-    }
-
     pub fn area(&self) -> f64 {
         self.area
+    }
+}
+
+impl Bounded for Face {
+    fn bounding_box(&self) -> BoundingBox {
+        self.bounding_box
     }
 }
 

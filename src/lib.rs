@@ -1,3 +1,4 @@
+pub mod bvh;
 mod camera;
 mod helpers;
 mod image;
