@@ -59,7 +59,7 @@ impl BVHNode {
 
 #[derive(Debug)]
 pub struct BVH {
-    root: BVHNode,
+    root: Box<BVHNode>,
 }
 
 impl BVH {
@@ -91,7 +91,7 @@ fn recursive_build(
     end: usize,
     ordered_prims: &mut Vec<Rc<dyn Bounded>>,
     max_prims_in_node: usize,
-) -> (BVHNode, i32) {
+) -> (Box<BVHNode>, i32) {
     let bounds = primitive_info[start..end]
         .iter()
         .fold(BoundingBox::default(), |acc, next| {
@@ -117,7 +117,6 @@ fn recursive_build(
                 acc.union_with_point(&next.centroid)
             });
         let dim = centroid_bounds.maximum_extent();
-        let mut mid = (start + end) / 2;
         let (min, max) = centroid_bounds.get_min_max();
         if max[dim] == min[dim] {
             (
@@ -131,88 +130,15 @@ fn recursive_build(
                 1,
             )
         } else {
-            if number_primitives <= 4 {
-                let mid = (start + end) / 2;
-                primitive_info[start..end].select_nth_unstable_by(mid, |a, b| {
-                    a.centroid[dim]
-                        .partial_cmp(&b.centroid[dim])
-                        .expect("Error comparing centroids")
-                });
-            } else {
-                const NUMBER_BUCKETS: usize = 12;
-                #[derive(Default, Clone, Copy)]
-                struct BucketInfo {
-                    count: usize,
-                    bounds: BoundingBox,
-                }
+            let mid = (start + end) / 2;
+            dbg!(start, end, mid, primitive_info.len());
+            primitive_info[start..end].select_nth_unstable_by(mid - start, |a, b| {
+                a.centroid[dim]
+                    .partial_cmp(&b.centroid[dim])
+                    .unwrap_or(std::cmp::Ordering::Equal)
+            });
 
-                let mut buckets = [BucketInfo::default(); NUMBER_BUCKETS];
-
-                for i in start..end {
-                    let mut b = (NUMBER_BUCKETS as f64
-                        * centroid_bounds.offset(&primitive_info[i].centroid)[dim])
-                        as usize;
-                    if b == NUMBER_BUCKETS {
-                        b = NUMBER_BUCKETS - 1;
-                    }
-                    buckets[b].count += 1;
-                    buckets[b].bounds = buckets[b].bounds.union(&primitive_info[i].bounding_box);
-                }
-
-                let mut costs = [0.0 as f64; NUMBER_BUCKETS - 1];
-                for i in 0..(NUMBER_BUCKETS - 1) {
-                    let mut b0 = BoundingBox::default();
-                    let mut b1 = BoundingBox::default();
-                    let mut count0 = 0;
-                    let mut count1 = 0;
-                    for j in 0..=i {
-                        b0 = b0.union(&buckets[j].bounds);
-                        count0 += buckets[j].count;
-                    }
-
-                    for j in (i + 1)..NUMBER_BUCKETS {
-                        b1 = b1.union(&buckets[j].bounds);
-                        count1 += buckets[j].count;
-                    }
-                    costs[i] = 0.125
-                        + (count0 as f64 * b0.surface_area() + count1 as f64 * b1.surface_area())
-                            / bounds.surface_area()
-                }
-
-                let mut min_cost = costs[0];
-                let mut min_cost_split_bucket = 0;
-                for i in 1..(NUMBER_BUCKETS - 1) {
-                    if costs[i] < min_cost {
-                        min_cost = costs[i];
-                        min_cost_split_bucket = i;
-                    }
-                }
-
-                let leaf_cost = number_primitives;
-                if number_primitives > max_prims_in_node || min_cost < leaf_cost as f64 {
-                    mid = primitive_info[start..end].partition_point(|pi| {
-                        let mut b = (NUMBER_BUCKETS as f64
-                            * centroid_bounds.offset(&pi.centroid)[dim])
-                            as usize;
-                        if b == NUMBER_BUCKETS {
-                            b = NUMBER_BUCKETS - 1;
-                        }
-                        b <= min_cost_split_bucket
-                    });
-                } else {
-                    return (
-                        create_leaf_node(
-                            primitives,
-                            primitive_info,
-                            ordered_prims,
-                            bounds,
-                            number_primitives,
-                        ),
-                        1,
-                    );
-                }
-            }
-            let (children_left, left_nodes) = recursive_build(
+            let (right_child, left_num) = recursive_build(
                 primitives,
                 primitive_info,
                 start,
@@ -220,7 +146,8 @@ fn recursive_build(
                 ordered_prims,
                 max_prims_in_node,
             );
-            let (children_right, right_nodes) = recursive_build(
+
+            let (left_child, right_num) = recursive_build(
                 primitives,
                 primitive_info,
                 mid,
@@ -228,9 +155,10 @@ fn recursive_build(
                 ordered_prims,
                 max_prims_in_node,
             );
+
             (
-                BVHNode::new_interior(dim, Box::new(children_left), Box::new(children_right)),
-                left_nodes + right_nodes,
+                Box::new(BVHNode::new_interior(dim, left_child, right_child)),
+                1 + left_num + right_num,
             )
         }
     }
@@ -242,11 +170,15 @@ fn create_leaf_node(
     ordered_prims: &mut Vec<Rc<dyn Bounded>>,
     bounds: BoundingBox,
     number_primitives: usize,
-) -> BVHNode {
+) -> Box<BVHNode> {
     let first_prim_offset = ordered_prims.len();
     for prim in primitive_info {
         let prim_number = prim.id;
         ordered_prims.push(Rc::clone(&primitives[prim_number]));
     }
-    BVHNode::new_leaf(bounds, number_primitives, first_prim_offset)
+    Box::new(BVHNode::new_leaf(
+        bounds,
+        number_primitives,
+        first_prim_offset,
+    ))
 }
