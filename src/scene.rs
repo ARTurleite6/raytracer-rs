@@ -8,7 +8,9 @@ use crate::{
     camera::{Camera, CameraArgs},
     light::{
         area_light::AreaLight,
-        light_sampler::{power_sampler::PowerLightSampler, LightSampler},
+        light_sampler::{
+            power_sampler::PowerLightSampler, uniform_sampler::UniformLightSampler, LightSampler,
+        },
         Light,
     },
     object::{
@@ -72,15 +74,16 @@ impl Scene {
 
         let objects: Vec<Mesh> = models.into_iter().map(Mesh::from).collect();
 
-        let bvh = bvh::BVH::new(
-            &objects
-                .iter()
-                .map(|mesh| Rc::new(mesh.clone()) as Rc<dyn Bounded>)
-                .collect(),
-        );
-        dbg!(bvh);
+        //let bvh = bvh::BVH::new(
+        //    &objects
+        //        .iter()
+        //        .map(|mesh| Rc::new(mesh.clone()) as Rc<dyn Bounded>)
+        //        .collect(),
+        //);
+        //dbg!(&objects);
 
-        let light_sampler = Box::new(PowerLightSampler::new(lights.clone()));
+        let _light_sampler = Box::new(PowerLightSampler::new(lights.clone()));
+        let light_sampler = Box::new(UniformLightSampler::new(lights.clone()));
         let geometric_lights = light_sampler.geometric_lights();
 
         Ok(Self {

@@ -17,9 +17,7 @@ anyhow = "1.0.86"
 clap = { version = "4.5.2", features = ["derive"] }
 fastrand = "2.1.0"
 image = "0.25.1"
-indicatif = { version = "0.17.8", features = ["rayon"] }
 nalgebra = { version = "0.32.4", features = ["serde-serialize"] }
-png = "0.17.13"
 rand = { version = "0.8.5", features = ["alloc", "std_rng"] }
 rayon = "1.10.0"
 serde = { version = "1.0.197", features = ["derive"] }
